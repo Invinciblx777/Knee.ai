@@ -1,14 +1,20 @@
 import { useContext, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { deleteAnalysis, imageUrl, listAnalyses, getAnalysis, downloadReport, updateAdvice } from '../lib/api'
+import { useLanguage } from '../lib/LanguageContext'
 import { Card, Empty, ErrorNote, SeverityBadge, Spinner } from '../components/ui'
 import Icon from '../components/Icon'
 import { AuthContext } from '../App'
 
-const FILTERS = ['All', 'Normal', 'Mild OA', 'Moderate OA', 'Severe OA']
+const FILTER_VALUES = ['All', 'Normal', 'Mild OA', 'Moderate OA', 'Severe OA']
+const FILTER_KEYS = {
+  All: 'filterAll', Normal: 'classNormal', 'Mild OA': 'classMild',
+  'Moderate OA': 'classModerate', 'Severe OA': 'classSevere',
+}
 
 export default function History() {
   const { userRole } = useContext(AuthContext)
+  const { t } = useLanguage()
   const isDoctor = userRole === 'doctor'
 
   const [items, setItems] = useState(null)
@@ -55,7 +61,7 @@ export default function History() {
   }
 
   if (error && !items) return <ErrorNote>{error}</ErrorNote>
-  if (!items) return <Spinner label="Loading history…" />
+  if (!items) return <Spinner label={t('loadingHistory')} />
 
   const visible = items.filter((i) => {
     const passFilter = filter === 'All' || i.classification === filter
@@ -67,24 +73,24 @@ export default function History() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="page-title">History</h2>
-          <p className="text-[13px] text-muted mt-1 font-display">{items.length} stored analyses.</p>
+          <h2 className="page-title">{t('navHistory')}</h2>
+          <p className="text-[13px] text-muted mt-1 font-display">{items.length} {t('historyStoredSuffix')}</p>
         </div>
-        <Link to="/new" className="btn-primary"><Icon name="scan" size={15} />New Analysis</Link>
+        <Link to="/new" className="btn-primary"><Icon name="scan" size={15} />{t('navNewAnalysis')}</Link>
       </div>
 
       <ErrorNote>{error}</ErrorNote>
 
       {items.length === 0 ? (
         <Empty
-          title="Nothing stored yet"
-          body="Completed analyses appear here with their assessment, implant recommendation and report."
-          cta={{ to: '/new', label: 'Run an analysis' }}
+          title={t('nothingStoredYet')}
+          body={t('nothingStoredBody')}
+          cta={{ to: '/new', label: t('runAnAnalysis') }}
         />
       ) : (
         <Card
-          eyebrow="Archive"
-          title="Stored Analyses"
+          eyebrow={t('archive')}
+          title={t('storedAnalyses')}
           icon="history"
           action={
             <div className="flex flex-wrap items-center gap-2">
@@ -95,13 +101,13 @@ export default function History() {
                 />
                 <input
                   className="input h-8 w-44 pl-8 text-[13px]"
-                  placeholder="Search patient"
+                  placeholder={t('searchPatient')}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </div>
               <div className="flex gap-1">
-                {FILTERS.map((f) => (
+                {FILTER_VALUES.map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
@@ -113,7 +119,7 @@ export default function History() {
                     ].join(' ')}
                     style={{ border: filter === f ? '2px solid #2D2016' : '2px solid transparent' }}
                   >
-                    {f}
+                    {t(FILTER_KEYS[f])}
                   </button>
                 ))}
               </div>
@@ -124,14 +130,14 @@ export default function History() {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="th">Scan</th>
-                  <th className="th">Patient</th>
-                  <th className="th">Date</th>
-                  <th className="th">Assessment</th>
-                  <th className="th">KL</th>
-                  <th className="th">Mean thickness</th>
-                  <th className="th">Primary implant</th>
-                  <th className="th text-right">Actions</th>
+                  <th className="th">{t('tableScan')}</th>
+                  <th className="th">{t('tablePatient')}</th>
+                  <th className="th">{t('tableDate')}</th>
+                  <th className="th">{t('tableAssessment')}</th>
+                  <th className="th">{t('tableKl')}</th>
+                  <th className="th">{t('tableMeanThickness')}</th>
+                  <th className="th">{t('tablePrimaryImplant')}</th>
+                  <th className="th text-right">{t('tableActions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,7 +154,8 @@ export default function History() {
                     <td className="td">
                       <div className="font-display font-semibold text-navy">{r.patient.name}</div>
                       <div className="text-muted text-[11px]">
-                        {r.patient.age} · {r.patient.sex} · {r.patient.affected_side}
+                        {r.patient.age} · {r.patient.sex === 'Female' ? t('female') : t('male')} ·{' '}
+                        {r.patient.affected_side === 'Left' ? t('left') : t('right')}
                       </div>
                     </td>
                     <td className="td text-muted font-display">{r.created_at.replace('T', ' ')}</td>
@@ -166,7 +173,7 @@ export default function History() {
                           className="inline-flex items-center gap-1 h-7 px-2 rounded-[8px] text-accent
                                      font-display font-semibold text-[12px] transition-colors duration-150 hover:bg-accent-light"
                         >
-                          Open
+                          {t('open')}
                         </Link>
                         <button
                           onClick={() => handleDownload(r.analysis_id)}
@@ -174,7 +181,7 @@ export default function History() {
                           className="inline-flex items-center gap-1 h-7 px-2 rounded-[8px] text-muted
                                      font-display font-semibold text-[12px] transition-colors duration-150 hover:bg-page hover:text-navy disabled:opacity-50"
                         >
-                          <Icon name="download" size={13} /> {downloadingId === r.analysis_id ? 'Wait...' : 'PDF'}
+                          <Icon name="download" size={13} /> {downloadingId === r.analysis_id ? t('wait') : t('pdf')}
                         </button>
 
                         {isDoctor && (
@@ -183,7 +190,7 @@ export default function History() {
                             className="inline-flex items-center gap-1 h-7 px-2 rounded-[8px] text-accent
                                        font-display font-semibold text-[12px] transition-colors duration-150 hover:bg-accent-light"
                           >
-                            <Icon name="edit" size={13} /> Advice
+                            <Icon name="edit" size={13} /> {t('advice')}
                           </button>
                         )}
 
@@ -191,7 +198,7 @@ export default function History() {
                           onClick={() => remove(r.analysis_id)}
                           className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] text-ink-300
                                      transition-colors duration-150 hover:bg-danger-light hover:text-danger"
-                          aria-label="Delete analysis"
+                          aria-label={t('deleteAnalysisLabel')}
                         >
                           <Icon name="trash" size={14} />
                         </button>
@@ -201,7 +208,7 @@ export default function History() {
                 ))}
                 {visible.length === 0 && (
                   <tr>
-                    <td className="td text-muted font-display" colSpan={8}>No analyses match the current filter.</td>
+                    <td className="td text-muted font-display" colSpan={8}>{t('noMatchFilter')}</td>
                   </tr>
                 )}
               </tbody>
@@ -212,25 +219,25 @@ export default function History() {
       {adviceModal.open && (
         <div className="fixed inset-0 z-50 bg-navy/20 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-[16px] shadow-xl p-6 w-full max-w-md" style={{ border: '3px solid #2D2016' }}>
-            <h3 className="font-serif text-lg text-navy mb-4 font-bold">Add Medical Advice</h3>
+            <h3 className="font-serif text-lg text-navy mb-4 font-bold">{t('addMedicalAdvice')}</h3>
             <textarea
               className="input w-full h-32 resize-none text-[13px] p-3 mb-4"
-              placeholder="Type your notes or advice here..."
+              placeholder={t('adviceNotesPlaceholder')}
               value={adviceModal.text}
               onChange={e => setAdviceModal({ ...adviceModal, text: e.target.value })}
             />
             <div className="flex gap-2 justify-end">
-              <button 
+              <button
                 className="px-4 py-2 rounded-[8px] text-[13px] font-display font-semibold text-muted hover:bg-page"
                 onClick={() => setAdviceModal({ open: false, id: null, text: '' })}
               >
-                Cancel
+                {t('cancel')}
               </button>
-              <button 
+              <button
                 className="btn-primary px-6"
                 onClick={saveAdvice}
               >
-                Save
+                {t('save')}
               </button>
             </div>
           </div>

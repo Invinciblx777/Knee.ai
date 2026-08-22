@@ -1,11 +1,17 @@
 import { AnalysisShell, KL_COLOR, MeniscusTable, ModuleHeader, QualityCard } from '../components/AnalysisShell'
+import { useLanguage } from '../lib/LanguageContext'
 import { Card, Disclaimer, Gauge, SeverityBadge, Tile } from '../components/ui'
 import Icon from '../components/Icon'
 import Viewer from '../components/Viewer'
 import { ThicknessComparison, ThicknessRadar } from '../components/Charts'
 
+// English classification value -> its translation key. `value` fields stay
+// the literal English strings the backend returns; only display goes through t().
+const CLASS_KEY = { Normal: 'classNormal', 'Mild OA': 'classMild', 'Moderate OA': 'classModerate', 'Severe OA': 'classSevere' }
+
 /** Module 1 — medial meniscus thickness and OA analysis. */
 export default function OaAnalysis() {
+  const { t } = useLanguage()
   return (
     <AnalysisShell>
       {(result) => {
@@ -20,23 +26,23 @@ export default function OaAnalysis() {
         <ModuleHeader
           n={1}
           tone="bg-ok"
-          title="Medial Meniscus Thickness & OA Analysis"
-          subtitle="Meniscus calliper measurements, KL grading, and osteoarthritis classification against age- and sex-matched population means."
+          title={t('module1Title')}
+          subtitle={t('module1Subtitle')}
         />
 
         {/* metric row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <Tile
-            label="OA Assessment"
+            label={t('oaAssessmentLabel')}
             icon="activity"
             tone={a.classification === 'Normal' ? 'green' : a.classification === 'Severe OA' ? 'red' : 'amber'}
             footer={
               <p className="card-sub font-display">
                 {a.age_escalated
-                  ? `Escalated from ${a.base_classification} · age > 60`
+                  ? `${t('escalatedFromPrefix')} ${t(CLASS_KEY[a.base_classification] || 'classNormal')} · ${t('ageGt60Suffix')}`
                   : a.sex_adjusted
-                    ? 'Sex-adjusted thresholds applied'
-                    : `Age band ${a.age_band || '<40'} · standard thresholds`}
+                    ? t('sexAdjustedThresholds')
+                    : `${t('ageBandPrefix')} ${a.age_band || '<40'} · ${t('standardThresholdsSuffix')}`}
               </p>
             }
           >
@@ -48,7 +54,7 @@ export default function OaAnalysis() {
                 return (
                   <span
                     key={step}
-                    title={step}
+                    title={t(CLASS_KEY[step])}
                     className="h-2 flex-1 rounded-full transition-colors duration-200"
                     style={{
                       backgroundColor: active ? colors[i] : '#E8DCC8',
@@ -59,18 +65,18 @@ export default function OaAnalysis() {
               })}
             </div>
             <p className="mt-2 text-[11px] text-muted font-display">
-              Severity scale · Normal → Severe
+              {t('severityScaleLabel')} · {t('classNormal')} → {t('classSevere')}
             </p>
           </Tile>
 
           <Tile
-            label="KL Grade"
+            label={t('klGradeLabel')}
             icon="layers"
             tone="amber"
             footer={<p className="card-sub font-display">{kl.description}</p>}
           >
             <div className="flex items-center gap-4">
-              <Gauge value={kl.grade} max={4} color={KL_COLOR[kl.grade]} label="of 4" />
+              <Gauge value={kl.grade} max={4} color={KL_COLOR[kl.grade]} label={t('ofFour')} />
               <div className="space-y-1">
                 {[0, 1, 2, 3, 4].map((g) => (
                   <div key={g} className="flex items-center gap-2">
@@ -88,12 +94,12 @@ export default function OaAnalysis() {
           </Tile>
 
           <Tile
-            label="Mean Meniscus Thickness"
+            label={t('meanMeniscusThicknessLabel')}
             icon="ruler"
             tone="blue"
             footer={
               <p className="card-sub font-display">
-                Minimum {a.min_thickness_mm.toFixed(1)} mm across the three locations
+                {t('minimumWord')} {a.min_thickness_mm.toFixed(1)} mm {t('acrossThreeLocations')}
               </p>
             }
           >
@@ -120,8 +126,8 @@ export default function OaAnalysis() {
 
         {/* Meniscus detail card */}
         <Card
-          eyebrow="Meniscus Analysis"
-          title="Medial Meniscus Thickness"
+          eyebrow={t('meniscusAnalysisEyebrow')}
+          title={t('meniscusThicknessCardTitle')}
           icon="ruler"
           tone="green"
           action={<SeverityBadge value={a.classification} />}
@@ -130,11 +136,11 @@ export default function OaAnalysis() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <div className="rounded-[12px] p-4" style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}>
-              <p className="eyebrow mb-4">Patient vs population means</p>
+              <p className="eyebrow mb-4">{t('patientVsPopulation')}</p>
               <ThicknessComparison rows={result.meniscus.population_comparison} />
             </div>
             <div className="rounded-[12px] p-4" style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}>
-              <p className="eyebrow mb-4">Profile shape</p>
+              <p className="eyebrow mb-4">{t('profileShape')}</p>
               <ThicknessRadar rows={result.meniscus.population_comparison} sex={result.patient.sex} />
             </div>
           </div>

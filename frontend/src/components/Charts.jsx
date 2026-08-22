@@ -3,6 +3,7 @@ import {
   PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Scatter, ScatterChart,
   Tooltip, XAxis, YAxis,
 } from 'recharts'
+import { useLanguage } from '../lib/LanguageContext'
 
 const AXIS = { fontSize: 11, fill: '#8B7D6B', fontFamily: 'Space Grotesk, sans-serif' }
 const GRID = '#E8DCC8'
@@ -19,7 +20,13 @@ const TOOLTIP = {
 
 const LEGEND = { fontSize: 11, paddingTop: 10, color: '#8B7D6B', fontFamily: 'Space Grotesk, sans-serif' }
 
+// English classification value -> its translation key, for chart legends fed
+// by backend data. Values plotted (dataKey) stay English; only `name`, which
+// recharts uses for the legend/tooltip label, is translated.
+const CLASS_KEY = { Normal: 'classNormal', 'Mild OA': 'classMild', 'Moderate OA': 'classModerate', 'Severe OA': 'classSevere' }
+
 export function ThicknessComparison({ rows }) {
+  const { t } = useLanguage()
   const data = rows.map((r) => ({
     name: r.label,
     Patient: r.patient,
@@ -34,19 +41,20 @@ export function ThicknessComparison({ rows }) {
         <XAxis dataKey="name" tick={AXIS} tickLine={false} axisLine={{ stroke: '#E8DCC8' }} />
         <YAxis
           tick={AXIS} tickLine={false} axisLine={false} domain={[0, 7]}
-          label={{ value: 'mm', angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
+          label={{ value: t('axisMm'), angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
         />
-        <Tooltip {...TOOLTIP} formatter={(v) => `${v} mm`} />
+        <Tooltip {...TOOLTIP} formatter={(v) => `${v} ${t('axisMm')}`} />
         <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={7} />
-        <Bar dataKey="Patient" fill="#E8772E" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
-        <Bar dataKey="Male mean" fill="#B0A28E" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
-        <Bar dataKey="Female mean" fill="#D5C9B5" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Bar dataKey="Patient" name={t('legendPatient')} fill="#E8772E" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Bar dataKey="Male mean" name={`${t('male')} ${t('statLabelMean').toLowerCase()}`} fill="#B0A28E" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Bar dataKey="Female mean" name={`${t('female')} ${t('statLabelMean').toLowerCase()}`} fill="#D5C9B5" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   )
 }
 
 export function ThicknessRadar({ rows, sex }) {
+  const { t } = useLanguage()
   const isFemale = sex === 'Female'
   const data = rows.map((r) => ({
     axis: r.label,
@@ -60,14 +68,14 @@ export function ThicknessRadar({ rows, sex }) {
         <PolarGrid stroke="#E8DCC8" />
         <PolarAngleAxis dataKey="axis" tick={AXIS} />
         <PolarRadiusAxis domain={[0, 7]} tick={AXIS} axisLine={false} />
-        <Tooltip {...TOOLTIP} cursor={false} formatter={(v) => `${v} mm`} />
+        <Tooltip {...TOOLTIP} cursor={false} formatter={(v) => `${v} ${t('axisMm')}`} />
         <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={7} />
         <Radar
-          name="Patient" dataKey="Patient" stroke="#E8772E" strokeWidth={2}
+          name={t('legendPatient')} dataKey="Patient" stroke="#E8772E" strokeWidth={2}
           fill="#E8772E" fillOpacity={0.15} isAnimationActive={false}
         />
         <Radar
-          name={`${isFemale ? 'Female' : 'Male'} population mean`}
+          name={`${isFemale ? t('female') : t('male')} ${t('populationMeanSuffix')}`}
           dataKey="Population" stroke="#D5C9B5" strokeWidth={2} strokeDasharray="4 3"
           fill="#D5C9B5" fillOpacity={0.08} isAnimationActive={false}
         />
@@ -117,6 +125,7 @@ const SEVERITY_FILL = {
 
 /** Distribution of mean meniscus thickness across the cohort. */
 export function ThicknessHistogram({ bins }) {
+  const { t } = useLanguage()
   const data = bins.map((b) => ({ name: b.range, Studies: b.count }))
   return (
     <ResponsiveContainer width="100%" height={240}>
@@ -124,11 +133,11 @@ export function ThicknessHistogram({ bins }) {
         <CartesianGrid stroke={GRID} vertical={false} />
         <XAxis
           dataKey="name" tick={AXIS} tickLine={false} axisLine={{ stroke: '#E8DCC8' }}
-          label={{ value: 'mean thickness (mm)', position: 'insideBottom', offset: -2, style: AXIS }}
+          label={{ value: t('axisMeanThicknessMm'), position: 'insideBottom', offset: -2, style: AXIS }}
         />
         <YAxis tick={AXIS} tickLine={false} axisLine={false} allowDecimals={false} />
-        <Tooltip {...TOOLTIP} formatter={(v) => `${v} studies`} />
-        <Bar dataKey="Studies" fill="#E8772E" radius={[4, 4, 0, 0]} maxBarSize={44} isAnimationActive={false} />
+        <Tooltip {...TOOLTIP} formatter={(v) => `${v} ${t('studiesUnit')}`} />
+        <Bar dataKey="Studies" name={t('studiesWord')} fill="#E8772E" radius={[4, 4, 0, 0]} maxBarSize={44} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -136,10 +145,11 @@ export function ThicknessHistogram({ bins }) {
 
 /** Group means with n labelled, used for OA class, sex, and age band. */
 export function GroupMeans({ groups, height = 240 }) {
+  const { t } = useLanguage()
   const data = groups
     .filter((g) => g.n > 0)
     .map((g) => ({ name: `${g.label} (n=${g.n})`, key: g.label, Mean: g.mean }))
-  if (!data.length) return <EmptyChart label="No group has any study yet." />
+  if (!data.length) return <EmptyChart label={t('noGroupYet')} />
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
@@ -147,10 +157,10 @@ export function GroupMeans({ groups, height = 240 }) {
         <XAxis dataKey="name" tick={AXIS} tickLine={false} axisLine={{ stroke: '#E8DCC8' }} />
         <YAxis
           tick={AXIS} tickLine={false} axisLine={false}
-          label={{ value: 'mm', angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
+          label={{ value: t('axisMm'), angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
         />
-        <Tooltip {...TOOLTIP} formatter={(v) => `${v} mm`} />
-        <Bar dataKey="Mean" radius={[4, 4, 0, 0]} maxBarSize={54} isAnimationActive={false}>
+        <Tooltip {...TOOLTIP} formatter={(v) => `${v} ${t('axisMm')}`} />
+        <Bar dataKey="Mean" name={t('statLabelMean')} radius={[4, 4, 0, 0]} maxBarSize={54} isAnimationActive={false}>
           {data.map((d) => (
             <Cell key={d.key} fill={SEVERITY_FILL[d.key] || '#E8772E'} />
           ))}
@@ -162,8 +172,9 @@ export function GroupMeans({ groups, height = 240 }) {
 
 /** Age against thickness, one point per study, coloured by OA class. */
 export function CohortScatter({ points }) {
+  const { t } = useLanguage()
   const withAge = points.filter((p) => p.age != null && p.mean_thickness_mm != null)
-  if (!withAge.length) return <EmptyChart label="No study has both an age and a thickness." />
+  if (!withAge.length) return <EmptyChart label={t('noAgeThicknessStudy')} />
   const byClass = {}
   withAge.forEach((p) => {
     const k = p.classification || 'Unclassified'
@@ -174,23 +185,23 @@ export function CohortScatter({ points }) {
       <ScatterChart margin={{ top: 8, right: 12, left: -18, bottom: 8 }}>
         <CartesianGrid stroke={GRID} />
         <XAxis
-          type="number" dataKey="x" name="Age" domain={['dataMin - 4', 'dataMax + 4']}
+          type="number" dataKey="x" name={t('age')} domain={['dataMin - 4', 'dataMax + 4']}
           tick={AXIS} tickLine={false} axisLine={{ stroke: '#E8DCC8' }}
-          label={{ value: 'age (years)', position: 'insideBottom', offset: -4, style: AXIS }}
+          label={{ value: t('axisAgeYears'), position: 'insideBottom', offset: -4, style: AXIS }}
         />
         <YAxis
-          type="number" dataKey="y" name="Thickness" domain={['dataMin - 0.4', 'dataMax + 0.4']}
+          type="number" dataKey="y" name={t('thicknessWord')} domain={['dataMin - 0.4', 'dataMax + 0.4']}
           tick={AXIS} tickLine={false} axisLine={false}
-          label={{ value: 'mm', angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
+          label={{ value: t('axisMm'), angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
         />
         <Tooltip
           {...TOOLTIP} cursor={{ strokeDasharray: '3 3' }}
-          formatter={(v, n) => (n === 'Thickness' ? `${v} mm` : v)}
+          formatter={(v, n) => (n === t('thicknessWord') ? `${v} ${t('axisMm')}` : v)}
         />
         <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={7} />
         {Object.entries(byClass).map(([cls, pts]) => (
           <Scatter
-            key={cls} name={cls} data={pts}
+            key={cls} name={CLASS_KEY[cls] ? t(CLASS_KEY[cls]) : t('unclassifiedWord')} data={pts}
             fill={SEVERITY_FILL[cls] || '#8B7D6B'} isAnimationActive={false}
           />
         ))}
@@ -201,7 +212,8 @@ export function CohortScatter({ points }) {
 
 /** Count distribution for implant sizes / systems. */
 export function CountBars({ items, color = '#3B82F6' }) {
-  if (!items?.length) return <EmptyChart label="Nothing to plot." />
+  const { t } = useLanguage()
+  if (!items?.length) return <EmptyChart label={t('nothingToPlot')} />
   const data = items.map((i) => ({ name: i.label, Studies: i.count }))
   return (
     <ResponsiveContainer width="100%" height={Math.max(180, data.length * 42)}>
@@ -209,8 +221,8 @@ export function CountBars({ items, color = '#3B82F6' }) {
         <CartesianGrid stroke={GRID} horizontal={false} />
         <XAxis type="number" tick={AXIS} tickLine={false} axisLine={false} allowDecimals={false} />
         <YAxis type="category" dataKey="name" tick={AXIS} tickLine={false} axisLine={false} width={128} />
-        <Tooltip {...TOOLTIP} formatter={(v) => `${v} studies`} />
-        <Bar dataKey="Studies" fill={color} radius={[0, 4, 4, 0]} maxBarSize={22} isAnimationActive={false} />
+        <Tooltip {...TOOLTIP} formatter={(v) => `${v} ${t('studiesUnit')}`} />
+        <Bar dataKey="Studies" name={t('studiesWord')} fill={color} radius={[0, 4, 4, 0]} maxBarSize={22} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   )

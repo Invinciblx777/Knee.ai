@@ -7,10 +7,10 @@ import { Card, ErrorNote, Spinner } from '../components/ui'
 import Icon from '../components/Icon'
 
 const THRESHOLDS = [
-  ['Severe OA', '< 3.0 mm', 'bg-danger'],
-  ['Moderate OA', '3.0 – 4.0 mm', 'bg-warn'],
-  ['Mild OA', '4.0 – 5.0 mm', 'bg-accent'],
-  ['Normal', '> 5.0 mm', 'bg-ok'],
+  ['classSevere', '< 3.0 mm', 'bg-danger'],
+  ['classModerate', '3.0 – 4.0 mm', 'bg-warn'],
+  ['classMild', '4.0 – 5.0 mm', 'bg-accent'],
+  ['classNormal', '> 5.0 mm', 'bg-ok'],
 ]
 
 export default function Settings() {
@@ -40,10 +40,8 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="page-title">Settings</h2>
-        <p className="text-[13px] text-muted mt-1 font-display">
-          Classification thresholds and the implant catalogue used for size matching.
-        </p>
+        <h2 className="page-title">{t('navSettings')}</h2>
+        <p className="text-[13px] text-muted mt-1 font-display">{t('settingsSubtitle')}</p>
       </div>
 
       <Card eyebrow="Account" title={t('signedInAs')} icon="user" tone="navy">
@@ -62,26 +60,26 @@ export default function Settings() {
       </Card>
 
       {error && <ErrorNote>{error}</ErrorNote>}
-      {!db && !error && <Spinner label="Loading configuration…" />}
+      {!db && !error && <Spinner label={t('loadingConfiguration')} />}
 
       {db && (
       <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card eyebrow="Rules" title="OA Classification Thresholds" icon="activity" tone="amber">
+        <Card eyebrow={t('rules')} title={t('oaThresholdsTitle')} icon="activity" tone="amber">
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="th">Class</th>
-                <th className="th">Mean meniscus thickness</th>
+                <th className="th">{t('colClass')}</th>
+                <th className="th">{t('colMeanThickness')}</th>
               </tr>
             </thead>
             <tbody>
-              {THRESHOLDS.map(([label, range, dot]) => (
-                <tr key={label} className="row-hover">
+              {THRESHOLDS.map(([labelKey, range, dot]) => (
+                <tr key={labelKey} className="row-hover">
                   <td className="td">
                     <span className="inline-flex items-center gap-2 font-display font-medium">
                       <span className={`w-2.5 h-2.5 rounded-full ${dot}`} style={{ border: '1px solid #2D2016' }} />
-                      {label}
+                      {t(labelKey)}
                     </span>
                   </td>
                   <td className="td font-display">{range}</td>
@@ -90,41 +88,42 @@ export default function Settings() {
             </tbody>
           </table>
           <ul className="mt-4 space-y-1.5 text-[12px] text-muted leading-relaxed font-display">
-            <li>Female patients: every threshold shifts down by 0.3 mm.</li>
-            <li>Age-band adjustments: 40-50 (−0.15 mm), 50-60 (−0.35 mm), &gt;60 (−0.55 mm + one grade escalation).</li>
-            <li>Results are seeded from the SHA-256 hash of the uploaded image for reproducibility.</li>
+            <li>{t('thresholdNoteFemale')}</li>
+            <li>{t('thresholdNoteAge')}</li>
+            <li>{t('thresholdNoteSeed')}</li>
           </ul>
         </Card>
 
-        <Card eyebrow="Legend" title="Overlay Colour Key" icon="layers" tone="blue">
+        <Card eyebrow={t('legend')} title={t('overlayColourKey')} icon="layers" tone="blue">
           <div className="space-y-3">
             {[
-              ['Femur', '#E8772E', 'Distal femur zone, drawn above the joint line.'],
-              ['Medial Meniscus', '#2D9F6F', 'Joint-space zone with the three calliper measurements.'],
-              ['Tibia', '#E85D75', 'Proximal tibia zone with the ML width and slope indicator.'],
-            ].map(([label, color, desc]) => (
-              <div key={label} className="flex items-start gap-3">
+              ['structFemur', '#E8772E', t('structFemurDesc')],
+              ['meniscusLegendLabel', '#2D9F6F', t('structMeniscusDesc')],
+              ['structTibia', '#E85D75', t('structTibiaDesc')],
+            ].map(([labelKey, color, desc]) => (
+              <div key={labelKey} className="flex items-start gap-3">
                 <span
                   className="w-8 h-8 rounded-[8px] mt-0.5 shrink-0"
                   style={{ backgroundColor: `${color}22`, border: `2px solid ${color}` }}
                 />
                 <div>
-                  <div className="text-[13px] font-display font-medium text-navy">{label}</div>
+                  <div className="text-[13px] font-display font-medium text-navy">
+                    {labelKey === 'meniscusLegendLabel' ? t('structMeniscus') : t(labelKey)}
+                  </div>
                   <div className="text-[12px] text-muted font-display">{desc}</div>
                 </div>
               </div>
             ))}
           </div>
           <p className="mt-5 text-[12px] text-muted leading-relaxed font-display">
-            Matching method: {db.systems.length} implant systems × 5 sizes, ranked by euclidean
-            distance across femoral ML/AP and tibial ML/AP.
+            {t('matchingMethodPrefix')} {db.systems.length} {t('matchingMethodSuffix')}
           </p>
         </Card>
       </div>
 
       <Card
-        eyebrow="Reference"
-        title="Implant Catalogue"
+        eyebrow={t('reference')}
+        title={t('implantCatalogue')}
         icon="implant"
         tone="blue"
         action={
@@ -138,19 +137,19 @@ export default function Settings() {
         }
       >
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] mb-4 font-display">
-          <div><span className="text-muted">Type: </span><span className="font-medium">{active.type}</span></div>
-          <div><span className="text-muted">Built-in slope: </span><span className="font-medium">{active.built_in_slope}°</span></div>
-          <div><span className="text-muted">Sizes: </span><span className="font-medium">{active.sizes.length}</span></div>
+          <div><span className="text-muted">{t('typeLabel')} </span><span className="font-medium">{active.type}</span></div>
+          <div><span className="text-muted">{t('builtInSlope')} </span><span className="font-medium">{active.built_in_slope}°</span></div>
+          <div><span className="text-muted">{t('sizesLabel')} </span><span className="font-medium">{active.sizes.length}</span></div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="th">Size</th>
-                <th className="th">Femoral ML</th>
-                <th className="th">Femoral AP</th>
-                <th className="th">Tibial ML</th>
-                <th className="th">Tibial AP</th>
+                <th className="th">{t('colSize')}</th>
+                <th className="th">{t('femoralMl')}</th>
+                <th className="th">{t('femoralAp')}</th>
+                <th className="th">{t('tibialMl')}</th>
+                <th className="th">{t('tibialAp')}</th>
               </tr>
             </thead>
             <tbody>

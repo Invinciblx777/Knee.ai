@@ -34,10 +34,11 @@ function ReviewBanner({ quality }) {
 
 /** Per-factor image quality breakdown plus the tolerance bands it implies. */
 function QualityCard({ quality, uncertainty }) {
+  const { t } = useLanguage()
   return (
     <Card
-      eyebrow="Measurement Confidence"
-      title="Image Quality & Uncertainty"
+      eyebrow={t('measurementConfidence')}
+      title={t('imageQualityUncertainty')}
       icon="shield"
       tone={quality.level === 'good' ? 'green' : quality.level === 'acceptable' ? 'amber' : 'red'}
       action={
@@ -80,9 +81,9 @@ function QualityCard({ quality, uncertainty }) {
         <>
           <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
             {[
-              ['Meniscus thickness', `±${uncertainty.meniscus_mm} mm`],
-              ['Bone dimensions', `±${uncertainty.bone_mm} mm`],
-              ['Tibial slope', `±${uncertainty.slope_deg}°`],
+              [t('uncertaintyMeniscus'), `±${uncertainty.meniscus_mm} mm`],
+              [t('uncertaintyBone'), `±${uncertainty.bone_mm} mm`],
+              [t('tibialSlope'), `±${uncertainty.slope_deg}°`],
             ].map(([k, v]) => (
               <div key={k} className="text-[13px] font-display">
                 <span className="text-muted">{k} </span>
@@ -103,6 +104,7 @@ function _statusOf(level) {
 
 /** Big labelled divider so the two clinical modules read as separate sections. */
 function ModuleHeader({ n, title, subtitle, tone }) {
+  const { t } = useLanguage()
   return (
     <div className="mb-5">
       <div className="flex items-center gap-3 flex-wrap">
@@ -111,7 +113,7 @@ function ModuleHeader({ n, title, subtitle, tone }) {
                       text-[12px] font-display font-bold uppercase tracking-wider`}
           style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}
         >
-          Module {n}
+          {t('moduleWord')} {n}
         </span>
         <h2 className="text-[21px] font-display font-bold text-navy tracking-[-0.02em] leading-tight">
           {title}
@@ -127,11 +129,11 @@ function PatientHeader({ result, onGetAdvice, gettingAdvice }) {
   const { t } = useLanguage()
   const p = result.patient
   const fields = [
-    ['Age', p.age],
-    ['Sex', p.sex],
-    ['Imaging', p.imaging_type],
-    ['Side', `${p.affected_side} knee`],
-    ['Analysed', result.created_at.replace('T', ' ')],
+    [t('age'), p.age],
+    [t('sex'), p.sex === 'Female' ? t('female') : t('male')],
+    [t('imaging'), p.imaging_type],
+    [t('sideShort'), `${p.affected_side === 'Left' ? t('left') : t('right')} ${t('kneeSuffix')}`],
+    [t('analysedLabel'), result.created_at.replace('T', ' ')],
   ]
 
   const [downloading, setDownloading] = useState(false)
@@ -204,18 +206,19 @@ function PatientHeader({ result, onGetAdvice, gettingAdvice }) {
 }
 
 function MeniscusTable({ rows, sex }) {
+  const { t } = useLanguage()
   const isFemale = sex === 'Female'
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className="th">Location</th>
-            <th className="th">Patient</th>
-            <th className="th">vs population</th>
-            <th className="th">Male mean</th>
-            <th className="th">Female mean</th>
-            <th className="th">Deviation</th>
+            <th className="th">{t('colLocation')}</th>
+            <th className="th">{t('tablePatient')}</th>
+            <th className="th">{t('colVsPopulation')}</th>
+            <th className="th">{t('colMaleMean')}</th>
+            <th className="th">{t('colFemaleMean')}</th>
+            <th className="th">{t('colDeviation')}</th>
           </tr>
         </thead>
         <tbody>
@@ -252,22 +255,23 @@ function MeniscusTable({ rows, sex }) {
 }
 
 function ImplantTable({ implant }) {
+  const { t } = useLanguage()
   const rows = [
-    { rank: 'Primary', ...implant.primary },
-    ...implant.alternatives.map((a, i) => ({ rank: `Alternative ${i + 1}`, ...a })),
+    { rank: t('rankPrimary'), ...implant.primary },
+    ...implant.alternatives.map((a, i) => ({ rank: `${t('rankAlternative')} ${i + 1}`, ...a })),
   ]
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className="th">Rank</th>
-            <th className="th">Manufacturer / System</th>
-            <th className="th">Size</th>
-            <th className="th">Femoral ML / AP</th>
-            <th className="th">Tibial ML / AP</th>
-            <th className="th">Δ max</th>
-            <th className="th">Match</th>
+            <th className="th">{t('colRank')}</th>
+            <th className="th">{t('colManufacturerSystem')}</th>
+            <th className="th">{t('colSize')}</th>
+            <th className="th">{t('colFemoralMlAp')}</th>
+            <th className="th">{t('colTibialMlAp')}</th>
+            <th className="th">{t('colDeltaMax')}</th>
+            <th className="th">{t('tableMatch')}</th>
           </tr>
         </thead>
         <tbody>
@@ -420,7 +424,7 @@ export function AnalysisShell({ children }) {
     return (
       <div className="space-y-4">
         <ErrorNote>{error}</ErrorNote>
-        <Link to="/new" className="btn-primary">Start a new analysis</Link>
+        <Link to="/new" className="btn-primary">{t('startNewAnalysis')}</Link>
       </div>
     )
   }
@@ -428,17 +432,15 @@ export function AnalysisShell({ children }) {
   if (empty) {
     return (
       <div className="space-y-4">
-        <Card eyebrow="No studies yet" title="Nothing to show" icon="scan" tone="slate">
-          <p className="text-[13px] text-muted font-display">
-            Run an analysis and this view will show its results.
-          </p>
-          <Link to="/new" className="btn-primary mt-4">Start a new analysis</Link>
+        <Card eyebrow={t('noStudiesYet')} title={t('nothingToShow')} icon="scan" tone="slate">
+          <p className="text-[13px] text-muted font-display">{t('runAnalysisEmptyBody')}</p>
+          <Link to="/new" className="btn-primary mt-4">{t('startNewAnalysis')}</Link>
         </Card>
       </div>
     )
   }
 
-  if (!result) return <Spinner label="Loading analysis…" />
+  if (!result) return <Spinner label={t('loadingAnalysis')} />
 
   return (
     <div className="space-y-8 animate-fade-up">

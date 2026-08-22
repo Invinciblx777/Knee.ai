@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listAnalyses } from '../lib/api'
+import { useLanguage } from '../lib/LanguageContext'
 import { Card, Empty, ErrorNote, SeverityBadge, Spinner, Stat } from '../components/ui'
 import Icon from '../components/Icon'
 
 export default function Dashboard() {
   const [items, setItems] = useState(null)
   const [error, setError] = useState('')
+  const { t } = useLanguage()
 
   useEffect(() => {
     listAnalyses().then((d) => setItems(d.items)).catch((e) => setError(e.message))
   }, [])
 
   if (error) return <ErrorNote>{error}</ErrorNote>
-  if (!items) return <Spinner label="Loading dashboard…" />
+  if (!items) return <Spinner label={t('loadingDashboard')} />
 
   const total = items.length
   const severe = items.filter((i) => i.classification === 'Severe OA').length
@@ -25,36 +27,34 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="page-title">Dashboard</h2>
-          <p className="text-[13px] text-muted mt-1">
-            Medial meniscus OA assessment and patient-specific implant sizing.
-          </p>
+          <h2 className="page-title">{t('navDashboard')}</h2>
+          <p className="text-[13px] text-muted mt-1">{t('dashboardSubtitle')}</p>
         </div>
-        <Link to="/new" className="btn-primary"><Icon name="scan" size={15} />New Analysis</Link>
+        <Link to="/new" className="btn-primary"><Icon name="scan" size={15} />{t('navNewAnalysis')}</Link>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Analyses Run" value={total} icon="layers" />
-        <Stat label="Severe OA Cases" value={severe} tone={severe ? 'bad' : 'good'} icon="activity"
-              hint={total ? `${((severe / total) * 100).toFixed(0)}% of the cohort` : 'No cases yet'} />
-        <Stat label="Mean KL Grade" value={meanKL} unit="/ 4" icon="ruler" tone="amber" />
-        <Stat label="Mean Implant Match" value={meanConf} unit="%" tone="accent" icon="implant" />
+        <Stat label={t('statAnalysesRun')} value={total} icon="layers" />
+        <Stat label={t('statSevereOa')} value={severe} tone={severe ? 'bad' : 'good'} icon="activity"
+              hint={total ? `${((severe / total) * 100).toFixed(0)}% ${t('ofTheCohort')}` : t('noCasesYet')} />
+        <Stat label={t('statMeanKl')} value={meanKL} unit="/ 4" icon="ruler" tone="amber" />
+        <Stat label={t('statMeanImplantMatch')} value={meanConf} unit="%" tone="accent" icon="implant" />
       </div>
 
       {total === 0 ? (
         <Empty
-          title="No analyses yet"
-          body="Upload a knee X-ray or MRI with patient details to generate a meniscus assessment and implant sizing recommendation."
-          cta={{ to: '/new', label: 'Run your first analysis' }}
+          title={t('noAnalysesYet')}
+          body={t('noAnalysesBody')}
+          cta={{ to: '/new', label: t('runFirstAnalysis') }}
         />
       ) : (
         <Card
-          eyebrow="Activity"
-          title="Recent Analyses"
+          eyebrow={t('activity')}
+          title={t('recentAnalyses')}
           icon="history"
           action={
             <Link to="/history" className="inline-flex items-center gap-1 text-[12px] font-display font-semibold text-accent">
-              View all <Icon name="chevron" size={13} />
+              {t('viewAll')} <Icon name="chevron" size={13} />
             </Link>
           }
         >
@@ -62,12 +62,12 @@ export default function Dashboard() {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="th">Patient</th>
-                  <th className="th">Side</th>
-                  <th className="th">Assessment</th>
-                  <th className="th">KL</th>
-                  <th className="th">Primary Implant</th>
-                  <th className="th">Match</th>
+                  <th className="th">{t('tablePatient')}</th>
+                  <th className="th">{t('tableSide')}</th>
+                  <th className="th">{t('tableAssessment')}</th>
+                  <th className="th">{t('tableKl')}</th>
+                  <th className="th">{t('tablePrimaryImplant')}</th>
+                  <th className="th">{t('tableMatch')}</th>
                   <th className="th"></th>
                 </tr>
               </thead>
@@ -86,12 +86,12 @@ export default function Dashboard() {
                         <div>
                           <div className="font-display font-semibold text-navy">{r.patient.name}</div>
                           <div className="text-muted text-[11px]">
-                            {r.patient.age} · {r.patient.sex} · {r.patient.imaging_type}
+                            {r.patient.age} · {r.patient.sex === 'Female' ? t('female') : t('male')} · {r.patient.imaging_type}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="td font-display">{r.patient.affected_side}</td>
+                    <td className="td font-display">{r.patient.affected_side === 'Left' ? t('left') : t('right')}</td>
                     <td className="td"><SeverityBadge value={r.classification} /></td>
                     <td className="td font-display font-bold text-navy tnum">{r.kl_grade}</td>
                     <td className="td font-display">{r.primary_implant}</td>
@@ -101,7 +101,7 @@ export default function Dashboard() {
                         to={`/results/${r.analysis_id}`}
                         className="inline-flex items-center gap-1 text-accent font-display font-semibold text-[13px]"
                       >
-                        Open <Icon name="chevron" size={13} />
+                        {t('open')} <Icon name="chevron" size={13} />
                       </Link>
                     </td>
                   </tr>

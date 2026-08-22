@@ -23,14 +23,22 @@ export function Card({ title, eyebrow, icon, tone = 'slate', action, children, c
 }
 
 const SEVERITY = {
-  Normal: { cls: 'bg-ok-light text-ok', dot: 'bg-ok' },
-  'Mild OA': { cls: 'bg-accent-light text-accent', dot: 'bg-accent' },
-  'Moderate OA': { cls: 'bg-warn-light text-warn', dot: 'bg-warn' },
-  'Severe OA': { cls: 'bg-danger-light text-danger', dot: 'bg-danger' },
+  Normal: { cls: 'bg-ok-light text-ok', dot: 'bg-ok', key: 'classNormal' },
+  'Mild OA': { cls: 'bg-accent-light text-accent', dot: 'bg-accent', key: 'classMild' },
+  'Moderate OA': { cls: 'bg-warn-light text-warn', dot: 'bg-warn', key: 'classModerate' },
+  'Severe OA': { cls: 'bg-danger-light text-danger', dot: 'bg-danger', key: 'classSevere' },
 }
 
+/**
+ * `value` stays the literal English classification the backend returns
+ * (Normal/Mild OA/Moderate OA/Severe OA) — only the displayed label is
+ * translated, via SEVERITY's key lookup. Never pass a translated string in;
+ * this component owns the English->display mapping.
+ */
 export function SeverityBadge({ value, size = 'md' }) {
+  const { t } = useLanguage()
   const s = SEVERITY[value] || { cls: 'bg-page text-muted', dot: 'bg-ink-400' }
+  const label = s.key ? t(s.key) : value
   const dims = size === 'lg' ? 'text-[15px] px-4 py-2' : 'text-[12px] px-3 py-1'
   return (
     <span
@@ -38,7 +46,7 @@ export function SeverityBadge({ value, size = 'md' }) {
       style={{ border: '2px solid #2D2016' }}
     >
       <span className={`w-2 h-2 rounded-full ${s.dot}`} />
-      {value}
+      {label}
     </span>
   )
 }

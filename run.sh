@@ -39,7 +39,7 @@ cleanup() {
 trap cleanup INT TERM EXIT
 
 info "Starting FastAPI on http://127.0.0.1:${BACKEND_PORT}"
-.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port "$BACKEND_PORT" --reload &
+(cd backend && "$ROOT/.venv/bin/python" -m uvicorn main:app --host 127.0.0.1 --port "$BACKEND_PORT" --reload) &
 API_PID=$!
 
 info "Starting Vite on http://127.0.0.1:${FRONTEND_PORT}"

@@ -12,6 +12,7 @@ import Results from './pages/Results'
 import OaAnalysis from './pages/OaAnalysis'
 import ImplantSizing from './pages/ImplantSizing'
 import Auth from './pages/Auth'
+import ChatWidget from './components/ChatWidget'
 
 export const AuthContext = createContext(null)
 
@@ -84,6 +85,7 @@ export default function App() {
             </Routes>
           </main>
         </div>
+        <ChatWidget />
       </div>
     </AuthContext.Provider>
   )

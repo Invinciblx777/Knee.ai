@@ -86,6 +86,14 @@ export const updateAdvice = async (id, adviceText) => {
   return { success: true }
 }
 
+/** One turn of the floating assistant chat. `messages` is the full history so far. */
+export const sendChatMessage = (messages, record) =>
+  fetchWithAuth(`${BASE}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, record: record || undefined }),
+  }).then(handle)
+
 export const getFoodAdvice = (record) =>
   fetchWithAuth(`${BASE}/advice`, {
     method: 'POST',

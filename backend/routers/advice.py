@@ -1,7 +1,5 @@
 """AI-generated food & diet advice for a patient's knee analysis."""
 
-import re
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -45,15 +43,6 @@ def _build_messages(record: dict) -> list:
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
 
-def _strip_markdown(text: str) -> str:
-    """Models don't always honour the plain-text instruction; clean up what leaks through."""
-    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
-    text = re.sub(r"(?m)^#{1,6}\s*", "", text)
-    text = re.sub(r"(?m)^\s*\d+\.\s+", "- ", text)
-    text = re.sub(r"(?m)^\s*\*\s+", "- ", text)
-    return text.strip()
-
-
 @router.post("/advice")
 def get_food_advice(req: AdviceRequest, user_id: str = Depends(get_current_user)):
     messages = _build_messages(req.record)
@@ -61,4 +50,4 @@ def get_food_advice(req: AdviceRequest, user_id: str = Depends(get_current_user)
         advice = fc.chat(messages)
     except fc.FeatherlessError as e:
         raise HTTPException(status_code=502, detail=str(e))
-    return {"advice": _strip_markdown(advice)}
+    return {"advice": fc.strip_markdown(advice)}

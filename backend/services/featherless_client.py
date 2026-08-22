@@ -1,6 +1,7 @@
 """Thin client for Featherless AI's OpenAI-compatible chat completions API."""
 
 import os
+import re
 from typing import List, Optional
 
 import httpx
@@ -44,3 +45,12 @@ def chat(messages: List[dict], model: Optional[str] = None, max_tokens: int = 90
         return data["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError) as e:
         raise FeatherlessError("Unexpected response shape from Featherless.") from e
+
+
+def strip_markdown(text: str) -> str:
+    """Models don't always honour a plain-text instruction; clean up what leaks through."""
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"(?m)^#{1,6}\s*", "", text)
+    text = re.sub(r"(?m)^\s*\d+\.\s+", "- ", text)
+    text = re.sub(r"(?m)^\s*\*\s+", "- ", text)
+    return text.strip()

@@ -11,7 +11,7 @@ over 60 are escalated by one severity grade.
 
 from typing import Dict, List
 
-from .seed import bounded_normal, rng_for
+from services.seed import bounded_normal, rng_for
 
 LOCATIONS = ["anterior_horn", "mid_body", "posterior_horn"]
 

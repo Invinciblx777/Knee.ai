@@ -10,15 +10,15 @@ import datetime
 import uuid
 from typing import Dict, List, Optional
 
-from . import image_processor as ip
-from . import sample_registry as sr
-from .implant_matcher import (
+from services import image_processor as ip
+from services import sample_registry as sr
+from services.implant_matcher import (
     describe_candidate,
     load_database,
     match_implants,
     measure_bones,
 )
-from .oa_classifier import (
+from services.oa_classifier import (
     LOCATION_LABELS,
     classify_oa,
     estimate_kl_grade,

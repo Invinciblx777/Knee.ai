@@ -1,10 +1,12 @@
 """AI-Assisted Knee Analysis Platform — FastAPI entrypoint."""
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import store
-from .routers import analysis, report
+import store
+from routers import analysis, report
 
 app = FastAPI(
     title="AI-Assisted Knee Analysis Platform",
@@ -16,9 +18,20 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Allow the production frontend URL (set via env var) plus local dev origins.
+_PROD_FRONTEND = os.getenv("FRONTEND_URL", "").strip()
+_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://knee-mu.vercel.app",
+    "https://kneeai.vercel.app",
+]
+if _PROD_FRONTEND and _PROD_FRONTEND not in _ORIGINS:
+    _ORIGINS.append(_PROD_FRONTEND)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

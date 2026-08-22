@@ -6,12 +6,12 @@ from typing import Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
-from .. import store
-from ..services import analysis_builder as builder
-from ..services import image_processor as ip
-from ..services import sample_registry as sr
-from ..services.implant_matcher import load_database
-from ..services.seed import image_hash
+import store
+from services import analysis_builder as builder
+from services import image_processor as ip
+from services import sample_registry as sr
+from services.implant_matcher import load_database
+from services.seed import image_hash
 
 router = APIRouter(prefix="/api", tags=["analysis"])
 

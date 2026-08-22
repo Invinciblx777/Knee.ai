@@ -6,8 +6,8 @@ import re
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from .. import store
-from ..services.report_builder import build_report
+import store
+from services.report_builder import build_report
 
 router = APIRouter(prefix="/api", tags=["report"])
 

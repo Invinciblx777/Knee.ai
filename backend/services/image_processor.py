@@ -16,7 +16,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from .seed import rng_for
+from services.seed import rng_for
 
 # BGR, because OpenCV.
 COLORS = {

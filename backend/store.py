@@ -10,7 +10,10 @@ import threading
 from typing import Dict, List, Optional
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STORAGE_DIR = os.path.join(BASE_DIR, "storage")
+# Vercel serverless is read-only except /tmp; use /tmp when the bundled
+# storage dir is not writable (e.g. production), fall back to local for dev.
+_LOCAL_STORAGE = os.path.join(BASE_DIR, "storage")
+STORAGE_DIR = _LOCAL_STORAGE if os.access(os.path.dirname(_LOCAL_STORAGE), os.W_OK) else "/tmp/knee-ai"
 IMAGE_DIR = os.path.join(STORAGE_DIR, "images")
 INDEX_PATH = os.path.join(STORAGE_DIR, "analyses.json")
 

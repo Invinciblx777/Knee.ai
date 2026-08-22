@@ -10,7 +10,7 @@ import math
 import os
 from typing import Dict, List, Optional
 
-from .seed import bounded_normal, rng_for
+from services.seed import bounded_normal, rng_for
 
 DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "implant_database.json")
 

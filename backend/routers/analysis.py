@@ -29,6 +29,13 @@ def get_current_user(authorization: str = Header(None)) -> str:
         raise HTTPException(status_code=401, detail=str(e))
 
 
+def get_bearer_token(authorization: str = Header(None)) -> str:
+    """Raw JWT, passed through to Supabase calls so RLS runs as the caller."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token. Please log in.")
+    return authorization.split(" ")[1]
+
+
 def _validate(filename: str, size: int) -> None:
     ext = os.path.splitext(filename or "")[1].lower()
     if ext not in ALLOWED_EXT:
@@ -58,6 +65,7 @@ async def analyze(
     imaging_type: str = Form(...),
     affected_side: str = Form(...),
     user_id: str = Depends(get_current_user),
+    token: str = Depends(get_bearer_token),
 ):
     """Analyse an upload.
 
@@ -90,7 +98,7 @@ async def analyze(
         }
         record = builder.build_simulated(img, digest, file.filename, patient, img, store.IMAGE_DIR)
 
-    db.save_analysis(user_id, record)
+    db.save_analysis(user_id, token, record)
     return record
 
 
@@ -109,7 +117,12 @@ def sample_image(source: str):
 
 
 @router.post("/analyze/sample/{source}")
-def analyze_sample(source: str, name: Optional[str] = Form(None), user_id: str = Depends(get_current_user)):
+def analyze_sample(
+    source: str,
+    name: Optional[str] = Form(None),
+    user_id: str = Depends(get_current_user),
+    token: str = Depends(get_bearer_token),
+):
     """Run a shipped sample straight through the model-inference path."""
     sample = sr.get(source)
     if sample is None:
@@ -121,15 +134,15 @@ def analyze_sample(source: str, name: Optional[str] = Form(None), user_id: str =
         sample, sample["image_file"], {"name": (name or "").strip() or None},
         image_hash(data), img, store.IMAGE_DIR,
     )
-    db.save_analysis(user_id, record)
+    db.save_analysis(user_id, token, record)
     return record
 
 
 @router.get("/analyses")
-def list_analyses(user_id: str = Depends(get_current_user)):
+def list_analyses(user_id: str = Depends(get_current_user), token: str = Depends(get_bearer_token)):
     """Compact rows for the History page."""
     rows = []
-    for r in db.list_analyses(user_id):
+    for r in db.list_analyses(user_id, token):
         rows.append(
             {
                 "analysis_id": r["analysis_id"],
@@ -153,16 +166,16 @@ def list_analyses(user_id: str = Depends(get_current_user)):
 
 
 @router.get("/analyses/{analysis_id}")
-def get_analysis(analysis_id: str, user_id: str = Depends(get_current_user)):
-    record = db.get_analysis(user_id, analysis_id)
+def get_analysis(analysis_id: str, user_id: str = Depends(get_current_user), token: str = Depends(get_bearer_token)):
+    record = db.get_analysis(user_id, token, analysis_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Analysis not found.")
     return record
 
 
 @router.delete("/analyses/{analysis_id}")
-def delete_analysis(analysis_id: str, user_id: str = Depends(get_current_user)):
-    if not db.delete_analysis(user_id, analysis_id):
+def delete_analysis(analysis_id: str, user_id: str = Depends(get_current_user), token: str = Depends(get_bearer_token)):
+    if not db.delete_analysis(user_id, token, analysis_id):
         raise HTTPException(status_code=404, detail="Analysis not found.")
     return {"deleted": analysis_id}
 

@@ -27,9 +27,24 @@ def verify_token(token: str) -> str:
     except Exception as e:
         raise Exception(f"Unauthorized: {str(e)}")
 
-def save_analysis(user_id: str, record: dict) -> None:
+def _client_for(token: str) -> Client:
+    """A fresh client per call, authenticated as the caller.
+
+    The shared `supabase` client only ever carries the anon key, so table/storage
+    calls made through it run as the anonymous role and get rejected by RLS
+    policies keyed on auth.uid(). Attaching the caller's own JWT here makes
+    those calls run as that user instead, which is what the policies expect.
+    """
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY or not token:
+        return None
+    client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    client.options.headers["Authorization"] = f"Bearer {token}"
+    return client
+
+def save_analysis(user_id: str, token: str, record: dict) -> None:
     """Saves a single analysis record to the Supabase database."""
-    if not supabase:
+    client = _client_for(token)
+    if not client:
         return
         
     analysis_id = record.get("analysis_id")
@@ -50,7 +65,7 @@ def save_analysis(user_id: str, record: dict) -> None:
             try:
                 img_bytes = base64.b64decode(b64_data)
                 # Upload to supabase storage bucket "images"
-                supabase.storage.from_("images").upload(
+                client.storage.from_("images").upload(
                     file=img_bytes,
                     path=filename,
                     file_options={"content-type": "image/png"}
@@ -73,31 +88,34 @@ def save_analysis(user_id: str, record: dict) -> None:
         "record": to_store
     }
     
-    supabase.table("analyses").insert(data).execute()
+    client.table("analyses").insert(data).execute()
 
-def list_analyses(user_id: str) -> list:
+def list_analyses(user_id: str, token: str) -> list:
     """Returns a list of analyses for the given user, ordered by creation."""
-    if not supabase:
+    client = _client_for(token)
+    if not client:
         return []
-        
-    response = supabase.table("analyses").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
+
+    response = client.table("analyses").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
     # Return the inner records
     return [item.get("record") for item in response.data]
 
-def get_analysis(user_id: str, analysis_id: str) -> dict:
-    if not supabase:
+def get_analysis(user_id: str, token: str, analysis_id: str) -> dict:
+    client = _client_for(token)
+    if not client:
         return None
-        
-    response = supabase.table("analyses").select("record").eq("user_id", user_id).eq("analysis_id", analysis_id).execute()
+
+    response = client.table("analyses").select("record").eq("user_id", user_id).eq("analysis_id", analysis_id).execute()
     if response.data and len(response.data) > 0:
         return response.data[0].get("record")
     return None
 
-def delete_analysis(user_id: str, analysis_id: str) -> bool:
-    if not supabase:
+def delete_analysis(user_id: str, token: str, analysis_id: str) -> bool:
+    client = _client_for(token)
+    if not client:
         return False
-        
-    response = supabase.table("analyses").delete().eq("user_id", user_id).eq("analysis_id", analysis_id).execute()
+
+    response = client.table("analyses").delete().eq("user_id", user_id).eq("analysis_id", analysis_id).execute()
     return len(response.data) > 0
 
 def get_image_url(filename: str) -> str:

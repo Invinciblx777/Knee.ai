@@ -49,9 +49,29 @@ export default function Settings() {
 
   const startEnroll = async () => {
     setMfaError('')
-    const { data, error: enrollErr } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
-    if (enrollErr) return setMfaError(enrollErr.message)
-    setEnrolling({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret })
+    try {
+      // An earlier abandoned attempt (closed tab, failed render, etc.) can
+      // leave an unverified TOTP factor behind, and Supabase refuses to
+      // enroll a new one while it's still pending — clear it first so
+      // "Enable 2FA" can never get permanently stuck.
+      const { data: existing } = await supabase.auth.mfa.listFactors()
+      const stale = (existing?.all || []).filter(
+        (f) => f.factor_type === 'totp' && f.status === 'unverified'
+      )
+      for (const f of stale) {
+        await supabase.auth.mfa.unenroll({ factorId: f.id }).catch(() => {})
+      }
+
+      const { data, error: enrollErr } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        // Unique per attempt so a retry never collides with itself either.
+        friendlyName: `authenticator-${Date.now()}`,
+      })
+      if (enrollErr) throw enrollErr
+      setEnrolling({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret })
+    } catch (err) {
+      setMfaError(err.message)
+    }
   }
 
   const confirmEnroll = async (e) => {
@@ -161,10 +181,20 @@ export default function Settings() {
             <p className="text-[12px] text-muted font-display leading-relaxed mb-3">{t('mfaScanQr')}</p>
             <div className="flex justify-center">
               <div
-                className="w-[172px] h-[172px] bg-white rounded-[8px] p-2 [&_svg]:w-full [&_svg]:h-full"
+                className="w-[172px] h-[172px] bg-white rounded-[8px] p-2 flex items-center justify-center"
                 style={{ border: '2px solid #2D2016' }}
-                dangerouslySetInnerHTML={{ __html: enrolling.qr.startsWith('<svg') || enrolling.qr.startsWith('<?xml') ? enrolling.qr : '' }}
-              />
+              >
+                {/* Supabase returns the QR as an SVG document (XML declaration and
+                    all), not an HTML fragment — injecting it via innerHTML is what
+                    produced a blank box. Its own docs point at this: wrap it as a
+                    data: URI and let the browser's image decoder parse it as SVG,
+                    same as any other image source. */}
+                <img
+                  src={`data:image/svg+xml;utf-8,${encodeURIComponent(enrolling.qr)}`}
+                  alt="2FA setup QR code"
+                  className="w-full h-full"
+                />
+              </div>
             </div>
             <p className="mt-3 text-[11px] text-muted font-display text-center">{t('mfaManualSecret')}</p>
             <p className="mt-1 text-[12px] font-display font-bold text-navy text-center tracking-wider break-all">

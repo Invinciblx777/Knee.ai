@@ -1,0 +1,206 @@
+"""Builds the analysis record, from either inference path.
+
+``build_from_sample`` reads a sidecar produced by the (simulated) nnU-Net/MedSAM
+run and uses its numbers verbatim. ``build_simulated`` runs the deterministic
+hash-seeded simulation. Both return the same record shape, so the frontend and
+the PDF renderer never branch on mode except to show the badge and banner.
+"""
+
+import datetime
+import uuid
+from typing import Dict, List, Optional
+
+from . import image_processor as ip
+from . import sample_registry as sr
+from .implant_matcher import (
+    describe_candidate,
+    load_database,
+    match_implants,
+    measure_bones,
+)
+from .oa_classifier import (
+    LOCATION_LABELS,
+    classify_oa,
+    estimate_kl_grade,
+    measure_meniscus,
+    population_comparison,
+    thresholds_for,
+)
+
+
+def _slope_note(bones: Dict, primary: Dict) -> str:
+    return (
+        "Measured tibial slope {:.1f}deg vs {:.1f}deg built into the {} baseplate; "
+        "resection plan should absorb the {:.1f}deg difference."
+    ).format(
+        bones["tibial_slope_deg"],
+        primary.get("built_in_slope_deg", 0.0),
+        primary.get("system", "selected"),
+        abs(bones["tibial_slope_deg"] - primary.get("built_in_slope_deg", 0.0)),
+    )
+
+
+def _assemble(
+    analysis_id: str,
+    digest: str,
+    filename: str,
+    patient: Dict,
+    measurements: List[Dict],
+    assessment: Dict,
+    kl: Dict,
+    bones: Dict,
+    implant: Dict,
+    img,
+    variants: Dict,
+    mode: str,
+    provenance: Dict,
+) -> Dict:
+    return {
+        "analysis_id": analysis_id,
+        "created_at": datetime.datetime.now().isoformat(timespec="seconds"),
+        "image_hash": digest,
+        "source_filename": filename,
+        "mode": mode,
+        "mode_label": sr.MODE_LABELS[mode],
+        "demo_banner": None if mode == sr.MODE_MODEL else sr.DEMO_BANNER,
+        "provenance": provenance,
+        "patient": patient,
+        "meniscus": {
+            "measurements": measurements,
+            "assessment": assessment,
+            "kl_grade": kl,
+            "population_comparison": population_comparison(
+                measurements, patient["sex"], load_database()["population_reference"]["meniscus_thickness_mm"]
+            ),
+        },
+        "implant": implant,
+        "bone_measurements": bones,
+        "images": {
+            "variants": variants,
+            "base_url": "/api/images",
+            "width": int(img.shape[1]),
+            "height": int(img.shape[0]),
+        },
+        "overlay_colors": ip.HEX_COLORS,
+    }
+
+
+def build_simulated(img, data_digest: str, filename: str, patient: Dict, image, storage_dir: str) -> Dict:
+    """Deterministic simulation path — used for any upload that is not a sample."""
+    analysis_id = uuid.uuid4().hex[:12]
+    age, sex, side = patient["age"], patient["sex"], patient["affected_side"]
+
+    measurements = measure_meniscus(data_digest, age, sex)
+    assessment = classify_oa(measurements, age, sex)
+    kl = estimate_kl_grade(assessment["classification"], assessment["mean_thickness_mm"], age)
+
+    bones = measure_bones(data_digest, age, sex)
+    implant = match_implants(bones)
+
+    roi = ip.detect_roi(image, side)
+    zones = ip.compute_zones(data_digest, image.shape, roi, side)
+    variants = ip.render_variants(image, zones, measurements, bones, storage_dir, analysis_id)
+
+    record = _assemble(
+        analysis_id, data_digest, filename, patient, measurements, assessment, kl,
+        bones, implant, image, variants, sr.MODE_DEMO,
+        {
+            "method": "Deterministic simulation seeded from the image hash.",
+            "segmentation": "Proportional zones fitted to the detected bone region.",
+        },
+    )
+    record["images"]["roi"] = roi
+    return record
+
+
+def build_from_sample(sample: Dict, filename: str, patient_override: Optional[Dict], data_digest: str,
+                      image, storage_dir: str) -> Dict:
+    """Model-inference path — every number comes from the sample's JSON sidecar."""
+    analysis_id = uuid.uuid4().hex[:12]
+    sp = sample["patient"]
+    patient = {
+        "name": (patient_override or {}).get("name") or "{} (reference case)".format(sample["source"]),
+        "age": sp["age"],
+        "sex": sp["sex"],
+        "imaging_type": (patient_override or {}).get("imaging_type") or "X-ray",
+        "affected_side": sp["side"],
+    }
+
+    men = sample["meniscus"]
+    measurements = [
+        {"location": "anterior_horn", "label": LOCATION_LABELS["anterior_horn"],
+         "thickness_mm": men["anterior_horn_mm"]},
+        {"location": "mid_body", "label": LOCATION_LABELS["mid_body"],
+         "thickness_mm": men["mid_body_mm"]},
+        {"location": "posterior_horn", "label": LOCATION_LABELS["posterior_horn"],
+         "thickness_mm": men["posterior_horn_mm"]},
+    ]
+    values = [m["thickness_mm"] for m in measurements]
+    mean_thickness = round(sum(values) / len(values), 2)
+
+    assessment = {
+        "classification": sample["oa_classification"],
+        "base_classification": sample["oa_classification"],
+        "age_escalated": False,
+        "mean_thickness_mm": mean_thickness,
+        "min_thickness_mm": min(values),
+        "thresholds_mm": thresholds_for(patient["sex"]),
+        "rationale": [
+            "Segmentation and thickness measured by {}.".format(
+                sample.get("inference", {}).get("backbone", "the loaded model")),
+            "Mean medial meniscus thickness {:.2f} mm (min {:.1f} mm).".format(mean_thickness, min(values)),
+            "OA class and KL grade read from the model output for {}.".format(sample["source"]),
+        ],
+    }
+    kl = {"grade": sample["kl_grade"],
+          "description": sample.get("kl_description", "Model-assigned Kellgren-Lawrence grade.")}
+
+    bones = {
+        "femoral_ml_mm": sample["femur"]["ml_dimension_mm"],
+        "femoral_ap_mm": sample["femur"]["ap_dimension_mm"],
+        "tibial_ml_mm": sample["tibia"]["ml_dimension_mm"],
+        "tibial_ap_mm": sample["tibia"]["ap_dimension_mm"],
+        "tibial_slope_deg": sample["tibia"]["tibial_slope_deg"],
+    }
+    bones["aspect_ratio_femur"] = round(bones["femoral_ml_mm"] / bones["femoral_ap_mm"], 2)
+    bones["aspect_ratio_tibia"] = round(bones["tibial_ml_mm"] / bones["tibial_ap_mm"], 2)
+
+    picks = sample["implant_match"]
+    primary = describe_candidate(bones, picks["primary"]["system_id"], picks["primary"]["size"],
+                                 picks["primary"]["confidence_pct"])
+    alternatives = [
+        describe_candidate(bones, a["system_id"], a["size"], a["confidence_pct"])
+        for a in picks.get("alternatives", [])
+    ]
+    implant = {
+        "patient_dimensions_mm": {
+            "femoral_ml": bones["femoral_ml_mm"], "femoral_ap": bones["femoral_ap_mm"],
+            "tibial_ml": bones["tibial_ml_mm"], "tibial_ap": bones["tibial_ap_mm"],
+        },
+        "primary": primary,
+        "alternatives": alternatives,
+        "slope_note": _slope_note(bones, primary),
+        "method": "Sizes recommended by the model run and cross-checked against the catalogue centroids.",
+    }
+
+    polygons = {
+        "femur": sample["femur"]["segmentation_polygon"],
+        "meniscus": men["segmentation_polygon"],
+        "tibia": sample["tibia"]["segmentation_polygon"],
+    }
+    zones = ip.polygon_zones(polygons)
+    variants = ip.render_variants(image, zones, measurements, bones, storage_dir, analysis_id, polygons)
+
+    record = _assemble(
+        analysis_id, data_digest, filename, patient, measurements, assessment, kl,
+        bones, implant, image, variants, sr.MODE_MODEL,
+        {
+            "method": sample.get("inference", {}).get("backbone", "Loaded segmentation model"),
+            "segmentation": "Per-pixel polygons from the model output.",
+            "source": sample["source"],
+            "note": sample.get("inference", {}).get("note", ""),
+            "scale_px_per_mm": sample.get("inference", {}).get("scale_px_per_mm"),
+        },
+    )
+    record["sample_source"] = sample["source"]
+    return record

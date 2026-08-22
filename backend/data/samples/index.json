@@ -1,0 +1,60 @@
+{
+  "count": 5,
+  "samples": [
+    {
+      "source": "OAI_sample_01",
+      "md5": "f84323047699a8fb08b5f211a290a264",
+      "kl_grade": 0,
+      "oa": "Normal",
+      "patient": {
+        "age": 45,
+        "sex": "Female",
+        "side": "Left"
+      }
+    },
+    {
+      "source": "OAI_sample_02",
+      "md5": "c400ef0d2fbd9d35e56f6ffefa9ea870",
+      "kl_grade": 1,
+      "oa": "Mild OA",
+      "patient": {
+        "age": 52,
+        "sex": "Male",
+        "side": "Right"
+      }
+    },
+    {
+      "source": "OAI_sample_03",
+      "md5": "466775ec2cd2541ba0106a7c3375dccf",
+      "kl_grade": 2,
+      "oa": "Moderate OA",
+      "patient": {
+        "age": 58,
+        "sex": "Female",
+        "side": "Left"
+      }
+    },
+    {
+      "source": "OAI_sample_04",
+      "md5": "35861a829afcf7e0c639e83b607593d4",
+      "kl_grade": 3,
+      "oa": "Severe OA",
+      "patient": {
+        "age": 66,
+        "sex": "Male",
+        "side": "Right"
+      }
+    },
+    {
+      "source": "OAI_sample_05",
+      "md5": "85756c52f0fe1217d32face8c0a4b830",
+      "kl_grade": 4,
+      "oa": "Severe OA",
+      "patient": {
+        "age": 72,
+        "sex": "Female",
+        "side": "Left"
+      }
+    }
+  ]
+}

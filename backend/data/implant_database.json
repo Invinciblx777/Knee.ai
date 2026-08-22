@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "note": "Dimensions are nominal manufacturer-published component footprints (mm). Used here for hackathon simulation only.",
+    "fields": {
+      "femoral_ml": "Femoral component medio-lateral width (mm)",
+      "femoral_ap": "Femoral component antero-posterior depth (mm)",
+      "tibial_ml": "Tibial baseplate medio-lateral width (mm)",
+      "tibial_ap": "Tibial baseplate antero-posterior depth (mm)",
+      "built_in_slope": "Posterior slope built into the baseplate (degrees)"
+    }
+  },
+  "systems": [
+    {
+      "id": "zb-persona",
+      "manufacturer": "Zimmer Biomet",
+      "system": "Persona The Personalized Knee",
+      "type": "Cruciate Retaining",
+      "built_in_slope": 3.0,
+      "sizes": [
+        { "size": "XS", "femoral_ml": 55.0, "femoral_ap": 51.0, "tibial_ml": 58.0, "tibial_ap": 39.0 },
+        { "size": "S",  "femoral_ml": 60.0, "femoral_ap": 55.0, "tibial_ml": 62.0, "tibial_ap": 42.0 },
+        { "size": "M",  "femoral_ml": 65.0, "femoral_ap": 59.0, "tibial_ml": 67.0, "tibial_ap": 45.0 },
+        { "size": "L",  "femoral_ml": 70.0, "femoral_ap": 63.0, "tibial_ml": 72.0, "tibial_ap": 48.0 },
+        { "size": "XL", "femoral_ml": 76.0, "femoral_ap": 68.0, "tibial_ml": 78.0, "tibial_ap": 52.0 }
+      ]
+    },
+    {
+      "id": "zb-vanguard",
+      "manufacturer": "Zimmer Biomet",
+      "system": "Vanguard Complete Knee",
+      "type": "Posterior Stabilized",
+      "built_in_slope": 0.0,
+      "sizes": [
+        { "size": "XS", "femoral_ml": 57.0, "femoral_ap": 52.5, "tibial_ml": 59.0, "tibial_ap": 40.0 },
+        { "size": "S",  "femoral_ml": 62.0, "femoral_ap": 56.5, "tibial_ml": 64.0, "tibial_ap": 43.0 },
+        { "size": "M",  "femoral_ml": 67.5, "femoral_ap": 61.0, "tibial_ml": 69.0, "tibial_ap": 46.5 },
+        { "size": "L",  "femoral_ml": 72.5, "femoral_ap": 65.0, "tibial_ml": 74.0, "tibial_ap": 50.0 },
+        { "size": "XL", "femoral_ml": 78.0, "femoral_ap": 70.0, "tibial_ml": 80.0, "tibial_ap": 53.5 }
+      ]
+    },
+    {
+      "id": "stryker-triathlon",
+      "manufacturer": "Stryker",
+      "system": "Triathlon Total Knee",
+      "type": "Cruciate Retaining",
+      "built_in_slope": 3.0,
+      "sizes": [
+        { "size": "XS", "femoral_ml": 54.0, "femoral_ap": 50.0, "tibial_ml": 57.5, "tibial_ap": 38.5 },
+        { "size": "S",  "femoral_ml": 59.5, "femoral_ap": 54.5, "tibial_ml": 62.5, "tibial_ap": 41.5 },
+        { "size": "M",  "femoral_ml": 64.5, "femoral_ap": 58.5, "tibial_ml": 67.5, "tibial_ap": 44.5 },
+        { "size": "L",  "femoral_ml": 69.5, "femoral_ap": 62.5, "tibial_ml": 72.5, "tibial_ap": 48.5 },
+        { "size": "XL", "femoral_ml": 75.0, "femoral_ap": 67.0, "tibial_ml": 78.5, "tibial_ap": 52.5 }
+      ]
+    },
+    {
+      "id": "stryker-mako",
+      "manufacturer": "Stryker",
+      "system": "Mako Robotic-Arm TKA (Triathlon)",
+      "type": "Posterior Stabilized",
+      "built_in_slope": 3.0,
+      "sizes": [
+        { "size": "XS", "femoral_ml": 56.0, "femoral_ap": 51.5, "tibial_ml": 58.5, "tibial_ap": 39.5 },
+        { "size": "S",  "femoral_ml": 61.0, "femoral_ap": 55.5, "tibial_ml": 63.5, "tibial_ap": 42.5 },
+        { "size": "M",  "femoral_ml": 66.0, "femoral_ap": 60.0, "tibial_ml": 68.5, "tibial_ap": 46.0 },
+        { "size": "L",  "femoral_ml": 71.0, "femoral_ap": 64.0, "tibial_ml": 73.5, "tibial_ap": 49.5 },
+        { "size": "XL", "femoral_ml": 77.0, "femoral_ap": 69.0, "tibial_ml": 79.5, "tibial_ap": 53.0 }
+      ]
+    },
+    {
+      "id": "dps-attune",
+      "manufacturer": "DePuy Synthes",
+      "system": "ATTUNE Knee System",
+      "type": "Cruciate Retaining",
+      "built_in_slope": 0.0,
+      "sizes": [
+        { "size": "XS", "femoral_ml": 55.5, "femoral_ap": 50.5, "tibial_ml": 58.0, "tibial_ap": 38.0 },
+        { "size": "S",  "femoral_ml": 60.5, "femoral_ap": 54.0, "tibial_ml": 63.0, "tibial_ap": 41.0 },
+        { "size": "M",  "femoral_ml": 66.0, "femoral_ap": 58.0, "tibial_ml": 68.0, "tibial_ap": 44.0 },
+        { "size": "L",  "femoral_ml": 71.5, "femoral_ap": 62.0, "tibial_ml": 73.0, "tibial_ap": 47.5 },
+        { "size": "XL", "femoral_ml": 77.5, "femoral_ap": 66.5, "tibial_ml": 79.0, "tibial_ap": 51.0 }
+      ]
+    },
+    {
+      "id": "dps-sigma",
+      "manufacturer": "DePuy Synthes",
+      "system": "SIGMA Fixed Bearing Knee",
+      "type": "Posterior Stabilized",
+      "built_in_slope": 3.0,
+      "sizes": [
+        { "size": "XS", "femoral_ml": 53.5, "femoral_ap": 49.5, "tibial_ml": 56.5, "tibial_ap": 37.5 },
+        { "size": "S",  "femoral_ml": 58.5, "femoral_ap": 53.5, "tibial_ml": 61.5, "tibial_ap": 40.5 },
+        { "size": "M",  "femoral_ml": 63.5, "femoral_ap": 57.5, "tibial_ml": 66.5, "tibial_ap": 43.5 },
+        { "size": "L",  "femoral_ml": 68.5, "femoral_ap": 61.5, "tibial_ml": 71.5, "tibial_ap": 47.0 },
+        { "size": "XL", "femoral_ml": 74.5, "femoral_ap": 66.0, "tibial_ml": 77.5, "tibial_ap": 51.5 }
+      ]
+    }
+  ],
+  "population_reference": {
+    "meniscus_thickness_mm": {
+      "male":   { "anterior_horn": 5.4, "mid_body": 5.0, "posterior_horn": 6.0 },
+      "female": { "anterior_horn": 5.0, "mid_body": 4.6, "posterior_horn": 5.5 }
+    },
+    "bone_dimensions_mm": {
+      "male":   { "femoral_ml": 74.0, "femoral_ap": 64.0, "tibial_ml": 76.0, "tibial_ap": 49.0, "tibial_slope": 7.0 },
+      "female": { "femoral_ml": 66.0, "femoral_ap": 58.0, "tibial_ml": 68.0, "tibial_ap": 44.0, "tibial_slope": 8.0 }
+    }
+  }
+}

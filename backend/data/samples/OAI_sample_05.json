@@ -1,0 +1,274 @@
+{
+  "source": "OAI_sample_05",
+  "mode": "model_inference",
+  "inference": {
+    "backbone": "nnU-Net v2 (3d_fullres) + MedSAM refinement",
+    "scale_px_per_mm": 5.2,
+    "note": "Post-TKA candidate: bone-on-bone medial compartment, large osteophytes."
+  },
+  "patient": {
+    "age": 72,
+    "sex": "Female",
+    "side": "Left"
+  },
+  "meniscus": {
+    "anterior_horn_mm": 2.7,
+    "mid_body_mm": 2.5,
+    "posterior_horn_mm": 2.9,
+    "segmentation_polygon": [
+      [
+        189,
+        466
+      ],
+      [
+        261,
+        465
+      ],
+      [
+        330,
+        467
+      ],
+      [
+        330,
+        482
+      ],
+      [
+        261,
+        478
+      ],
+      [
+        189,
+        480
+      ]
+    ]
+  },
+  "femur": {
+    "ap_dimension_mm": 55.2,
+    "ml_dimension_mm": 63.8,
+    "segmentation_polygon": [
+      [
+        274,
+        40
+      ],
+      [
+        426,
+        40
+      ],
+      [
+        426,
+        240
+      ],
+      [
+        516,
+        314
+      ],
+      [
+        511,
+        375
+      ],
+      [
+        514,
+        385
+      ],
+      [
+        516,
+        394
+      ],
+      [
+        516,
+        404
+      ],
+      [
+        514,
+        414
+      ],
+      [
+        510,
+        423
+      ],
+      [
+        505,
+        432
+      ],
+      [
+        498,
+        440
+      ],
+      [
+        490,
+        447
+      ],
+      [
+        481,
+        453
+      ],
+      [
+        470,
+        457
+      ],
+      [
+        459,
+        461
+      ],
+      [
+        448,
+        463
+      ],
+      [
+        436,
+        464
+      ],
+      [
+        350,
+        439
+      ],
+      [
+        264,
+        464
+      ],
+      [
+        252,
+        463
+      ],
+      [
+        241,
+        461
+      ],
+      [
+        230,
+        457
+      ],
+      [
+        219,
+        453
+      ],
+      [
+        210,
+        447
+      ],
+      [
+        202,
+        440
+      ],
+      [
+        195,
+        432
+      ],
+      [
+        190,
+        423
+      ],
+      [
+        186,
+        414
+      ],
+      [
+        184,
+        404
+      ],
+      [
+        184,
+        394
+      ],
+      [
+        186,
+        385
+      ],
+      [
+        189,
+        375
+      ],
+      [
+        184,
+        314
+      ],
+      [
+        274,
+        240
+      ]
+    ]
+  },
+  "tibia": {
+    "ap_dimension_mm": 42.1,
+    "ml_dimension_mm": 65.7,
+    "tibial_slope_deg": 9.8,
+    "segmentation_polygon": [
+      [
+        179,
+        483
+      ],
+      [
+        292,
+        479
+      ],
+      [
+        336,
+        462
+      ],
+      [
+        364,
+        459
+      ],
+      [
+        408,
+        474
+      ],
+      [
+        521,
+        470
+      ],
+      [
+        511,
+        538
+      ],
+      [
+        439,
+        626
+      ],
+      [
+        439,
+        870
+      ],
+      [
+        261,
+        870
+      ],
+      [
+        261,
+        626
+      ],
+      [
+        189,
+        538
+      ]
+    ]
+  },
+  "oa_classification": "Severe OA",
+  "kl_grade": 4,
+  "kl_description": "Large osteophytes, marked narrowing, severe sclerosis and deformity.",
+  "implant_match": {
+    "primary": {
+      "system": "DePuy Synthes SIGMA Fixed Bearing Knee",
+      "system_id": "dps-sigma",
+      "size": "M",
+      "confidence_pct": 86.2
+    },
+    "alternatives": [
+      {
+        "system": "Zimmer Biomet Vanguard Complete Knee",
+        "system_id": "zb-vanguard",
+        "size": "S",
+        "confidence_pct": 85.7
+      },
+      {
+        "system": "Stryker Mako Robotic-Arm TKA (Triathlon)",
+        "system_id": "stryker-mako",
+        "size": "S",
+        "confidence_pct": 82.8
+      }
+    ]
+  },
+  "image_file": "OAI_sample_05.png",
+  "md5": "85756c52f0fe1217d32face8c0a4b830",
+  "sha256": "98112ad4feaa37c816b662542a5da9a67a6e0318562403097cdda2dc7eb7b39f"
+}

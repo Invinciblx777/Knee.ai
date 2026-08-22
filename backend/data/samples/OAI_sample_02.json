@@ -1,0 +1,274 @@
+{
+  "source": "OAI_sample_02",
+  "mode": "model_inference",
+  "inference": {
+    "backbone": "nnU-Net v2 (3d_fullres) + MedSAM refinement",
+    "scale_px_per_mm": 5.2,
+    "note": "Pre-analyzed reference case shipped with the platform."
+  },
+  "patient": {
+    "age": 52,
+    "sex": "Male",
+    "side": "Right"
+  },
+  "meniscus": {
+    "anterior_horn_mm": 4.9,
+    "mid_body_mm": 4.5,
+    "posterior_horn_mm": 5.2,
+    "segmentation_polygon": [
+      [
+        163,
+        458
+      ],
+      [
+        247,
+        457
+      ],
+      [
+        326,
+        459
+      ],
+      [
+        326,
+        487
+      ],
+      [
+        247,
+        481
+      ],
+      [
+        163,
+        484
+      ]
+    ]
+  },
+  "femur": {
+    "ap_dimension_mm": 64.9,
+    "ml_dimension_mm": 74.8,
+    "segmentation_polygon": [
+      [
+        261,
+        40
+      ],
+      [
+        439,
+        40
+      ],
+      [
+        439,
+        240
+      ],
+      [
+        544,
+        314
+      ],
+      [
+        539,
+        368
+      ],
+      [
+        543,
+        377
+      ],
+      [
+        544,
+        387
+      ],
+      [
+        544,
+        397
+      ],
+      [
+        542,
+        406
+      ],
+      [
+        537,
+        416
+      ],
+      [
+        531,
+        424
+      ],
+      [
+        523,
+        432
+      ],
+      [
+        514,
+        439
+      ],
+      [
+        503,
+        445
+      ],
+      [
+        491,
+        450
+      ],
+      [
+        478,
+        454
+      ],
+      [
+        465,
+        456
+      ],
+      [
+        451,
+        456
+      ],
+      [
+        350,
+        431
+      ],
+      [
+        249,
+        456
+      ],
+      [
+        235,
+        456
+      ],
+      [
+        222,
+        454
+      ],
+      [
+        209,
+        450
+      ],
+      [
+        197,
+        445
+      ],
+      [
+        186,
+        439
+      ],
+      [
+        177,
+        432
+      ],
+      [
+        169,
+        424
+      ],
+      [
+        163,
+        416
+      ],
+      [
+        158,
+        406
+      ],
+      [
+        156,
+        397
+      ],
+      [
+        156,
+        387
+      ],
+      [
+        157,
+        377
+      ],
+      [
+        161,
+        368
+      ],
+      [
+        156,
+        314
+      ],
+      [
+        261,
+        240
+      ]
+    ]
+  },
+  "tibia": {
+    "ap_dimension_mm": 49.8,
+    "ml_dimension_mm": 76.4,
+    "tibial_slope_deg": 7.4,
+    "segmentation_polygon": [
+      [
+        151,
+        489
+      ],
+      [
+        282,
+        486
+      ],
+      [
+        334,
+        469
+      ],
+      [
+        366,
+        466
+      ],
+      [
+        418,
+        481
+      ],
+      [
+        549,
+        478
+      ],
+      [
+        537,
+        546
+      ],
+      [
+        453,
+        634
+      ],
+      [
+        453,
+        870
+      ],
+      [
+        247,
+        870
+      ],
+      [
+        247,
+        634
+      ],
+      [
+        163,
+        546
+      ]
+    ]
+  },
+  "oa_classification": "Mild OA",
+  "kl_grade": 1,
+  "kl_description": "Doubtful joint space narrowing, possible osteophytic lipping.",
+  "implant_match": {
+    "primary": {
+      "system": "DePuy Synthes SIGMA Fixed Bearing Knee",
+      "system_id": "dps-sigma",
+      "size": "XL",
+      "confidence_pct": 88.5
+    },
+    "alternatives": [
+      {
+        "system": "Zimmer Biomet Vanguard Complete Knee",
+        "system_id": "zb-vanguard",
+        "size": "L",
+        "confidence_pct": 83.9
+      },
+      {
+        "system": "Stryker Triathlon Total Knee",
+        "system_id": "stryker-triathlon",
+        "size": "XL",
+        "confidence_pct": 80.9
+      }
+    ]
+  },
+  "image_file": "OAI_sample_02.png",
+  "md5": "c400ef0d2fbd9d35e56f6ffefa9ea870",
+  "sha256": "c8c60769ea891a85a8ed8541035034081e9f4722776fbd57d0ecf38fb1852226"
+}

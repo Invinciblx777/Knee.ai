@@ -5,11 +5,12 @@ import os
 import re
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
 
 import store
+from services import supabase_client as db
 from services.report_builder import build_report
 
 router = APIRouter(prefix="/api", tags=["report"])
@@ -21,10 +22,18 @@ SAFE_NAME = re.compile(r"^[A-Za-z0-9_\-.]+$")
 def get_image(filename: str):
     if not SAFE_NAME.match(filename) or ".." in filename:
         raise HTTPException(status_code=400, detail="Invalid image name.")
+    
+    # Check if we have it locally (for fresh generation or local fallback)
     path = os.path.join(store.IMAGE_DIR, filename)
-    if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail="Image not found.")
-    return FileResponse(path, media_type="image/png")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="image/png")
+        
+    # Otherwise redirect to the Supabase bucket
+    url = db.get_image_url(filename)
+    if url:
+        return RedirectResponse(url)
+        
+    raise HTTPException(status_code=404, detail="Image not found.")
 
 
 @router.get("/report/{analysis_id}")

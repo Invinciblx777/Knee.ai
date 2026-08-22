@@ -1,4 +1,15 @@
+import { supabase } from './supabase'
+
 const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+
+async function fetchWithAuth(url, options = {}) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const headers = { ...options.headers }
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`
+  }
+  return fetch(url, { ...options, headers })
+}
 
 async function handle(res) {
   if (!res.ok) {
@@ -20,23 +31,23 @@ export function analyze(file, patient) {
   form.append('sex', patient.sex)
   form.append('imaging_type', patient.imaging_type)
   form.append('affected_side', patient.affected_side)
-  return fetch(`${BASE}/analyze`, { method: 'POST', body: form }).then(handle)
+  return fetchWithAuth(`${BASE}/analyze`, { method: 'POST', body: form }).then(handle)
 }
 
-export const listSamples = () => fetch(`${BASE}/samples`).then(handle)
+export const listSamples = () => fetchWithAuth(`${BASE}/samples`).then(handle)
 
 export function analyzeSample(source, name) {
   const form = new FormData()
   if (name) form.append('name', name)
-  return fetch(`${BASE}/analyze/sample/${source}`, { method: 'POST', body: form }).then(handle)
+  return fetchWithAuth(`${BASE}/analyze/sample/${source}`, { method: 'POST', body: form }).then(handle)
 }
 
-export const listAnalyses = () => fetch(`${BASE}/analyses`).then(handle)
-export const getAnalysis = (id) => fetch(`${BASE}/analyses/${id}`).then(handle)
+export const listAnalyses = () => fetchWithAuth(`${BASE}/analyses`).then(handle)
+export const getAnalysis = (id) => fetchWithAuth(`${BASE}/analyses/${id}`).then(handle)
 export const deleteAnalysis = (id) =>
-  fetch(`${BASE}/analyses/${id}`, { method: 'DELETE' }).then(handle)
-export const getImplants = () => fetch(`${BASE}/implants`).then(handle)
-export const health = () => fetch(`${BASE}/health`).then(handle)
+  fetchWithAuth(`${BASE}/analyses/${id}`, { method: 'DELETE' }).then(handle)
+export const getImplants = () => fetchWithAuth(`${BASE}/implants`).then(handle)
+export const health = () => fetchWithAuth(`${BASE}/health`).then(handle)
 
 // If the value is already a data URL (base64), return it directly.
 // Otherwise construct the API endpoint URL for file-based serving.

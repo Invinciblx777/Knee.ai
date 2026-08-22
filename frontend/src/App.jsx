@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { supabase } from './lib/supabase'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
@@ -7,9 +8,35 @@ import NewAnalysis from './pages/NewAnalysis'
 import History from './pages/History'
 import Settings from './pages/Settings'
 import Results from './pages/Results'
+import Auth from './pages/Auth'
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false)
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setLoading(false)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (loading) {
+    return <div className="min-h-screen bg-page flex items-center justify-center text-muted font-display text-sm">Loading...</div>
+  }
+
+  if (!session) {
+    return <Auth />
+  }
 
   return (
     <div className="min-h-screen bg-page">

@@ -3,13 +3,14 @@
 import os
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Header, Depends
 from fastapi.responses import FileResponse
 
 import store
 from services import analysis_builder as builder
 from services import image_processor as ip
 from services import sample_registry as sr
+from services import supabase_client as db
 from services.implant_matcher import load_database
 from services.seed import image_hash
 
@@ -17,6 +18,15 @@ router = APIRouter(prefix="/api", tags=["analysis"])
 
 ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".dcm", ".dicom"}
 MAX_BYTES = 25 * 1024 * 1024
+
+def get_current_user(authorization: str = Header(None)) -> str:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token. Please log in.")
+    token = authorization.split(" ")[1]
+    try:
+        return db.verify_token(token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 
 def _validate(filename: str, size: int) -> None:
@@ -47,6 +57,7 @@ async def analyze(
     sex: str = Form(...),
     imaging_type: str = Form(...),
     affected_side: str = Form(...),
+    user_id: str = Depends(get_current_user),
 ):
     """Analyse an upload.
 
@@ -79,7 +90,7 @@ async def analyze(
         }
         record = builder.build_simulated(img, digest, file.filename, patient, img, store.IMAGE_DIR)
 
-    store.save(record)
+    db.save_analysis(user_id, record)
     return record
 
 
@@ -98,7 +109,7 @@ def sample_image(source: str):
 
 
 @router.post("/analyze/sample/{source}")
-def analyze_sample(source: str, name: Optional[str] = Form(None)):
+def analyze_sample(source: str, name: Optional[str] = Form(None), user_id: str = Depends(get_current_user)):
     """Run a shipped sample straight through the model-inference path."""
     sample = sr.get(source)
     if sample is None:
@@ -110,15 +121,15 @@ def analyze_sample(source: str, name: Optional[str] = Form(None)):
         sample, sample["image_file"], {"name": (name or "").strip() or None},
         image_hash(data), img, store.IMAGE_DIR,
     )
-    store.save(record)
+    db.save_analysis(user_id, record)
     return record
 
 
 @router.get("/analyses")
-def list_analyses():
+def list_analyses(user_id: str = Depends(get_current_user)):
     """Compact rows for the History page."""
     rows = []
-    for r in store.list_all():
+    for r in db.list_analyses(user_id):
         rows.append(
             {
                 "analysis_id": r["analysis_id"],
@@ -135,23 +146,23 @@ def list_analyses():
                 "confidence_pct": r["implant"]["primary"]["confidence_pct"],
                 "mode": r.get("mode", "demo"),
                 "mode_label": r.get("mode_label", "Demo Mode"),
-                "thumbnail": r["images"]["variants"]["femur-meniscus-tibia"],
+                "thumbnail": db.get_image_url(r["images"]["variants"]["femur-meniscus-tibia"]),
             }
         )
     return {"count": len(rows), "items": rows}
 
 
 @router.get("/analyses/{analysis_id}")
-def get_analysis(analysis_id: str):
-    record = store.get(analysis_id)
+def get_analysis(analysis_id: str, user_id: str = Depends(get_current_user)):
+    record = db.get_analysis(user_id, analysis_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Analysis not found.")
     return record
 
 
 @router.delete("/analyses/{analysis_id}")
-def delete_analysis(analysis_id: str):
-    if not store.delete(analysis_id):
+def delete_analysis(analysis_id: str, user_id: str = Depends(get_current_user)):
+    if not db.delete_analysis(user_id, analysis_id):
         raise HTTPException(status_code=404, detail="Analysis not found.")
     return {"deleted": analysis_id}
 

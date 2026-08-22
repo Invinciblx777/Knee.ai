@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { getImplants } from '../lib/api'
+import { supabase } from '../lib/supabase'
+import { AuthContext } from '../App'
 import { Card, ErrorNote, Spinner } from '../components/ui'
+import Icon from '../components/Icon'
 
 const THRESHOLDS = [
   ['Severe OA', '< 3.0 mm', 'bg-danger'],
@@ -10,9 +13,16 @@ const THRESHOLDS = [
 ]
 
 export default function Settings() {
+  const { session } = useContext(AuthContext)
   const [db, setDb] = useState(null)
   const [error, setError] = useState('')
   const [system, setSystem] = useState(null)
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    await supabase.auth.signOut()
+  }
 
   useEffect(() => {
     getImplants()
@@ -23,10 +33,7 @@ export default function Settings() {
       .catch((e) => setError(e.message))
   }, [])
 
-  if (error) return <ErrorNote>{error}</ErrorNote>
-  if (!db) return <Spinner label="Loading configuration…" />
-
-  const active = db.systems.find((s) => s.id === system)
+  const active = db && db.systems.find((s) => s.id === system)
 
   return (
     <div className="space-y-6">
@@ -37,6 +44,26 @@ export default function Settings() {
         </p>
       </div>
 
+      <Card eyebrow="Account" title="Signed In As" icon="user" tone="navy">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="text-[14px] font-display font-medium text-navy">{session?.user?.email}</div>
+            <div className="text-[12px] text-muted font-display capitalize mt-0.5">
+              {session?.user?.user_metadata?.role || 'patient'} account
+            </div>
+          </div>
+          <button onClick={handleLogout} disabled={loggingOut} className="btn-dark h-9 px-4 text-[13px]">
+            <Icon name="logout" size={15} />
+            {loggingOut ? 'Signing out…' : 'Sign Out'}
+          </button>
+        </div>
+      </Card>
+
+      {error && <ErrorNote>{error}</ErrorNote>}
+      {!db && !error && <Spinner label="Loading configuration…" />}
+
+      {db && (
+      <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card eyebrow="Rules" title="OA Classification Thresholds" icon="activity" tone="amber">
           <table className="w-full border-collapse">
@@ -145,6 +172,8 @@ export default function Settings() {
         </div>
         <p className="mt-4 text-[11px] text-muted font-display">{db.meta.note}</p>
       </Card>
+      </>
+      )}
     </div>
   )
 }

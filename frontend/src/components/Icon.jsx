@@ -113,6 +113,12 @@ const PATHS = {
       <path d="M7 4a2.5 2.5 0 1 0-2 4l3 3-3 3a2.5 2.5 0 1 0 2 4 2.5 2.5 0 1 0 4 2l3-3 3 3a2.5 2.5 0 1 0 4-2 2.5 2.5 0 1 0-2-4l-3-3 3-3a2.5 2.5 0 1 0-2-4 2.5 2.5 0 1 0-4-2l-3 3-3-3a2.5 2.5 0 0 0-4 2Z" />
     </>
   ),
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5M21 12H9" />
+    </>
+  ),
 }
 
 export default function Icon({ name, size = 16, className = '', strokeWidth = 1.6 }) {

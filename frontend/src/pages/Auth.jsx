@@ -7,7 +7,6 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('patient')
   const [error, setError] = useState('')
   const [mode, setMode] = useState('login') // 'login' | 'signup'
 
@@ -18,7 +17,7 @@ export default function Auth() {
 
     const authCall = mode === 'login' 
       ? supabase.auth.signInWithPassword({ email, password })
-      : supabase.auth.signUp({ email, password, options: { data: { role } } })
+      : supabase.auth.signUp({ email, password, options: { data: { role: 'patient' } } })
 
     const { error: err } = await authCall
     
@@ -72,38 +71,6 @@ export default function Auth() {
                 placeholder="••••••••"
               />
             </div>
-
-            {mode === 'signup' && (
-              <div className="pt-2">
-                <label className="block text-[11px] font-display font-semibold text-muted uppercase tracking-wider mb-2">
-                  I am a:
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRole('patient')}
-                    className={`h-10 rounded-[8px] text-[13px] font-display font-semibold transition-all duration-150 ${
-                      role === 'patient' 
-                        ? 'bg-accent-light text-accent border-2 border-navy' 
-                        : 'bg-page text-muted border-2 border-transparent hover:bg-ink-50'
-                    }`}
-                  >
-                    Patient
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole('doctor')}
-                    className={`h-10 rounded-[8px] text-[13px] font-display font-semibold transition-all duration-150 ${
-                      role === 'doctor' 
-                        ? 'bg-accent-light text-accent border-2 border-navy' 
-                        : 'bg-page text-muted border-2 border-transparent hover:bg-ink-50'
-                    }`}
-                  >
-                    Doctor
-                  </button>
-                </div>
-              </div>
-            )}
 
             <button type="submit" disabled={loading} className="btn-primary w-full h-10 mt-4 flex justify-center">
               {loading ? 'Please wait...' : (mode === 'login' ? 'Sign In' : 'Create Account')}

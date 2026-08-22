@@ -12,6 +12,7 @@ import Results from './pages/Results'
 import OaAnalysis from './pages/OaAnalysis'
 import ImplantSizing from './pages/ImplantSizing'
 import Auth from './pages/Auth'
+import MfaChallenge from './pages/MfaChallenge'
 import ChatWidget from './components/ChatWidget'
 
 export const AuthContext = createContext(null)
@@ -20,6 +21,16 @@ export default function App() {
   const [navOpen, setNavOpen] = useState(false)
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  // { currentLevel, nextLevel } from supabase.auth.mfa — null until fetched
+  // for the current session. Kept separate from `session` because a fresh
+  // password sign-in already carries a session (aal1) before the TOTP step,
+  // and rendering the app on session-presence alone would skip that step.
+  const [mfaLevel, setMfaLevel] = useState(null)
+
+  const refreshAal = async () => {
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    setMfaLevel(data)
+  }
 
   useEffect(() => {
     if (configError) {
@@ -27,15 +38,18 @@ export default function App() {
       return
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
+      if (session) await refreshAal()
       setLoading(false)
     })
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
+      if (session) await refreshAal()
+      else setMfaLevel(null)
     })
 
     return () => subscription.unsubscribe()
@@ -61,6 +75,18 @@ export default function App() {
 
   if (!session) {
     return <Auth />
+  }
+
+  // Session exists but its AAL hasn't been checked yet — render nothing
+  // rather than the app, so a 2FA-enabled account never shows even a flash
+  // of authenticated content before the TOTP step is enforced.
+  if (mfaLevel === null) {
+    return <div className="min-h-screen bg-page flex items-center justify-center text-muted font-display text-sm">Loading...</div>
+  }
+
+  const needsMfa = mfaLevel.nextLevel === 'aal2' && mfaLevel.currentLevel !== mfaLevel.nextLevel
+  if (needsMfa) {
+    return <MfaChallenge onVerified={refreshAal} />
   }
 
   return (

@@ -1,3 +1,5 @@
+import base64
+import json
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -14,16 +16,48 @@ if not SUPABASE_URL or not SUPABASE_ANON_KEY:
 else:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+
+def _aal_claim(token: str) -> str:
+    """Read the `aal` claim out of the access token's payload.
+
+    No signature check here — verify_token already proved this token is
+    genuine by round-tripping it through Supabase's own /auth/v1/user, so this
+    is just reading a field out of a value already established as trustworthy,
+    not an independent verification step.
+    """
+    try:
+        payload = token.split(".")[1]
+        payload += "=" * (-len(payload) % 4)
+        return json.loads(base64.urlsafe_b64decode(payload)).get("aal", "aal1")
+    except Exception:
+        return "aal1"
+
+
 def verify_token(token: str) -> str:
-    """Verifies a JWT via Supabase and returns the user_id."""
+    """Verifies a JWT via Supabase and returns the user_id.
+
+    Also enforces MFA step-up: if the account has a verified TOTP factor, the
+    token must carry aal2 (i.e. the holder actually completed the TOTP
+    challenge), not just aal1 (password only). Without this, a stolen
+    password alone would be enough to call the API directly even though the
+    account has 2FA enabled — the frontend's login-time MFA prompt only
+    guards the UI, not the token itself.
+    """
     if not supabase:
         raise ValueError("Supabase is not configured.")
     try:
         # Get the user using the access token
         user_response = supabase.auth.get_user(token)
-        if user_response and user_response.user:
-            return user_response.user.id
-        raise Exception("Invalid token")
+        if not (user_response and user_response.user):
+            raise Exception("Invalid token")
+
+        has_verified_factor = any(
+            f.status == "verified" for f in (user_response.user.factors or [])
+        )
+        if has_verified_factor and _aal_claim(token) != "aal2":
+            raise Exception("MFA verification required.")
+
+        return user_response.user.id
     except Exception as e:
         raise Exception(f"Unauthorized: {str(e)}")
 

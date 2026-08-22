@@ -21,9 +21,20 @@ export default function Settings() {
   const [system, setSystem] = useState(null)
   const [loggingOut, setLoggingOut] = useState(false)
 
+  const [factors, setFactors] = useState(null)
+  const [enrolling, setEnrolling] = useState(null) // { id, qr, secret }
+  const [mfaCode, setMfaCode] = useState('')
+  const [mfaBusy, setMfaBusy] = useState(false)
+  const [mfaError, setMfaError] = useState('')
+
   const handleLogout = async () => {
     setLoggingOut(true)
     await supabase.auth.signOut()
+  }
+
+  const loadFactors = async () => {
+    const { data } = await supabase.auth.mfa.listFactors()
+    setFactors(data?.totp || [])
   }
 
   useEffect(() => {
@@ -33,9 +44,61 @@ export default function Settings() {
         setSystem(d.systems[0].id)
       })
       .catch((e) => setError(e.message))
+    loadFactors()
   }, [])
 
+  const startEnroll = async () => {
+    setMfaError('')
+    const { data, error: enrollErr } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    if (enrollErr) return setMfaError(enrollErr.message)
+    setEnrolling({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret })
+  }
+
+  const confirmEnroll = async (e) => {
+    e.preventDefault()
+    setMfaBusy(true)
+    setMfaError('')
+    try {
+      const { error: verifyErr } = await supabase.auth.mfa.challengeAndVerify({
+        factorId: enrolling.id, code: mfaCode.trim(),
+      })
+      if (verifyErr) throw verifyErr
+      setEnrolling(null)
+      setMfaCode('')
+      await loadFactors()
+    } catch (err) {
+      setMfaError(err.message)
+    } finally {
+      setMfaBusy(false)
+    }
+  }
+
+  const cancelEnroll = async () => {
+    // Drop the pending, unverified factor rather than leaving it orphaned —
+    // an abandoned enrollment shouldn't linger on the account.
+    if (enrolling) await supabase.auth.mfa.unenroll({ factorId: enrolling.id }).catch(() => {})
+    setEnrolling(null)
+    setMfaCode('')
+    setMfaError('')
+  }
+
+  const removeFactor = async (factorId) => {
+    if (!window.confirm(t('mfaRemoveConfirm'))) return
+    setMfaBusy(true)
+    setMfaError('')
+    try {
+      const { error: unenrollErr } = await supabase.auth.mfa.unenroll({ factorId })
+      if (unenrollErr) throw unenrollErr
+      await loadFactors()
+    } catch (err) {
+      setMfaError(err.message)
+    } finally {
+      setMfaBusy(false)
+    }
+  }
+
   const active = db && db.systems.find((s) => s.id === system)
+  const verifiedFactor = factors?.find((f) => f.status === 'verified')
 
   return (
     <div className="space-y-6">
@@ -57,6 +120,86 @@ export default function Settings() {
             {loggingOut ? t('signingOut') : t('signOut')}
           </button>
         </div>
+      </Card>
+
+      <Card eyebrow="Security" title={t('mfaTitle')} icon="shield" tone="green">
+        <p className="text-[13px] text-muted font-display leading-relaxed">{t('mfaDescription')}</p>
+
+        {mfaError && <div className="mt-3"><ErrorNote>{mfaError}</ErrorNote></div>}
+
+        {!enrolling && (
+          <div className="mt-4 flex items-center justify-between gap-4 flex-wrap">
+            <span
+              className={`inline-flex items-center gap-2 h-8 px-3 rounded-full text-[12px] font-display font-semibold ${
+                verifiedFactor ? 'bg-ok-light text-ok' : 'bg-page text-muted'
+              }`}
+              style={{ border: '2px solid #2D2016' }}
+            >
+              <span className={`w-2 h-2 rounded-full ${verifiedFactor ? 'bg-ok' : 'bg-ink-400'}`} />
+              {verifiedFactor ? t('mfaEnabledStatus') : t('mfaDisabledStatus')}
+            </span>
+
+            {verifiedFactor ? (
+              <button
+                onClick={() => removeFactor(verifiedFactor.id)}
+                disabled={mfaBusy}
+                className="btn-ghost h-9 px-4 text-[13px]"
+              >
+                {t('mfaRemoveButton')}
+              </button>
+            ) : (
+              <button onClick={startEnroll} className="btn-primary h-9 px-4 text-[13px]">
+                <Icon name="shield" size={15} />
+                {t('mfaEnableButton')}
+              </button>
+            )}
+          </div>
+        )}
+
+        {enrolling && (
+          <div className="mt-5 rounded-[12px] bg-page p-4" style={{ border: '2px solid #2D2016' }}>
+            <p className="text-[12px] text-muted font-display leading-relaxed mb-3">{t('mfaScanQr')}</p>
+            <div className="flex justify-center">
+              <div
+                className="w-[172px] h-[172px] bg-white rounded-[8px] p-2 [&_svg]:w-full [&_svg]:h-full"
+                style={{ border: '2px solid #2D2016' }}
+                dangerouslySetInnerHTML={{ __html: enrolling.qr.startsWith('<svg') || enrolling.qr.startsWith('<?xml') ? enrolling.qr : '' }}
+              />
+            </div>
+            <p className="mt-3 text-[11px] text-muted font-display text-center">{t('mfaManualSecret')}</p>
+            <p className="mt-1 text-[12px] font-display font-bold text-navy text-center tracking-wider break-all">
+              {enrolling.secret}
+            </p>
+
+            <form onSubmit={confirmEnroll} className="mt-4 space-y-3">
+              <label className="label" htmlFor="mfa-code">{t('mfaEnterCode')}</label>
+              <input
+                id="mfa-code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                required
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                className="input h-11 text-[18px] text-center tracking-[0.4em] font-display font-bold"
+                placeholder="000000"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="submit"
+                  disabled={mfaBusy || mfaCode.trim().length !== 6}
+                  className="btn-primary h-9 px-4 text-[13px] flex-1"
+                >
+                  {mfaBusy ? t('mfaVerifying') : t('mfaConfirm')}
+                </button>
+                <button type="button" onClick={cancelEnroll} className="btn-ghost h-9 px-4 text-[13px]">
+                  {t('cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </Card>
 
       {error && <ErrorNote>{error}</ErrorNote>}

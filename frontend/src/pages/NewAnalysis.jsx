@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { analyze, analyzeSample, listSamples } from '../lib/api'
 import { Card, Disclaimer, ErrorNote, Spinner } from '../components/ui'
+import Icon, { IconChip } from '../components/Icon'
 
 const ACCEPT = '.jpg,.jpeg,.png,.bmp,.tif,.tiff,.dcm,.dicom'
 
@@ -85,14 +86,14 @@ export default function NewAnalysis() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-[20px] font-semibold text-navy">New Analysis</h2>
-        <p className="text-[13px] text-muted mt-1">
+        <h2 className="page-title">New Analysis</h2>
+        <p className="text-[13px] text-muted mt-1.5">
           Upload a knee X-ray or MRI and complete the patient intake to run both assessment modules.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="1 — Imaging">
+        <Card eyebrow="Step 01" title="Imaging" icon="scan" tone="blue">
           <div
             onDragOver={(e) => {
               e.preventDefault()
@@ -106,11 +107,20 @@ export default function NewAnalysis() {
             }}
             onClick={() => inputRef.current?.click()}
             className={[
-              'rounded-card border border-dashed px-4 py-10 text-center cursor-pointer transition-colors',
-              dragging ? 'border-accent bg-accent/5' : 'border-line hover:border-accent/60 hover:bg-surface',
+              'rounded-card border-2 border-dashed px-4 py-12 text-center cursor-pointer',
+              'transition-all duration-200',
+              dragging
+                ? 'border-accent bg-accent-light scale-[1.01]'
+                : 'border-line hover:border-accent/50 hover:bg-page/70',
             ].join(' ')}
           >
-            <p className="text-[14px] font-medium text-navy">
+            <span className={[
+              'mx-auto w-12 h-12 rounded-xl2 flex items-center justify-center transition-colors duration-200',
+              dragging ? 'bg-accent text-white' : 'bg-accent-light text-accent',
+            ].join(' ')}>
+              <Icon name="upload" size={22} />
+            </span>
+            <p className="mt-4 text-[14px] font-semibold text-navy">
               {file ? file.name : 'Drop an image here, or click to browse'}
             </p>
             <p className="text-[12px] text-muted mt-1.5">
@@ -127,13 +137,13 @@ export default function NewAnalysis() {
 
           {file && (
             <div className="mt-4">
-              <div className="rounded-card border border-line overflow-hidden bg-navy/[0.02] flex items-center justify-center min-h-[220px]">
+              <div className="stage flex items-center justify-center min-h-[220px]">
                 {preview && !isDicom ? (
                   <img src={preview} alt="Upload preview" className="max-h-[340px] w-auto" />
                 ) : (
                   <div className="text-center px-6 py-10">
-                    <p className="text-[13px] font-medium text-navy">Preview unavailable</p>
-                    <p className="text-[12px] text-muted mt-1">
+                    <p className="text-[13px] font-semibold text-white/80">Preview unavailable</p>
+                    <p className="text-[12px] text-white/45 mt-1">
                       DICOM-lite files render after the server decodes them.
                     </p>
                   </div>
@@ -149,11 +159,15 @@ export default function NewAnalysis() {
           )}
 
           <div className="mt-6 pt-5 border-t border-line">
-            <div className="flex items-baseline justify-between gap-3">
-              <h3 className="text-[13px] font-semibold text-navy">
-                Or try with a pre-analyzed sample:
-              </h3>
-              <span className="text-[11px] text-muted">runs as Model Inference</span>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <IconChip name="sparkle" tone="green" size="sm" />
+                <div>
+                  <h3 className="text-[13px] font-semibold text-navy">Pre-analyzed samples</h3>
+                  <p className="text-[11px] text-muted">One click runs the stored model output</p>
+                </div>
+              </div>
+              <span className="pill-pos">Model Inference</span>
             </div>
 
             {samples === null ? (
@@ -168,25 +182,40 @@ export default function NewAnalysis() {
                     onClick={() => runSample(s.source)}
                     disabled={!!runningSample}
                     title={s.note}
-                    className="text-left rounded-card border border-line overflow-hidden
-                               hover:border-accent hover:bg-surface transition-colors
-                               disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="group text-left rounded-card border border-line overflow-hidden bg-surface
+                               transition-all duration-200 hover:border-accent hover:shadow-lift
+                               hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed
+                               disabled:hover:translate-y-0 disabled:hover:shadow-card"
                   >
-                    <div className="relative aspect-[3/4] bg-navy/[0.03] overflow-hidden">
-                      <img src={s.image_url} alt={s.source} className="w-full h-full object-cover" />
-                      <span className="absolute top-1.5 right-1.5 rounded bg-navy/85 text-white
-                                       text-[10px] font-semibold px-1.5 py-0.5">
+                    <div className="relative aspect-[3/4] bg-stage overflow-hidden">
+                      <img
+                        src={s.image_url} alt={s.source}
+                        className="w-full h-full object-cover transition-transform duration-300
+                                   group-hover:scale-[1.06]"
+                      />
+                      <span className="absolute top-2 right-2 rounded-md bg-black/60 backdrop-blur-sm
+                                       text-white text-[10px] font-bold px-1.5 py-0.5">
                         KL{s.kl_grade}
                       </span>
+                      <span className="absolute inset-x-0 bottom-0 h-9 flex items-center justify-center
+                                       bg-accent text-white text-[11px] font-semibold translate-y-full
+                                       transition-transform duration-200 group-hover:translate-y-0">
+                        {runningSample === s.source ? 'Running…' : 'Run analysis'}
+                      </span>
                     </div>
-                    <div className="p-2">
-                      <div className="text-[11px] font-medium text-navy">
+                    <div className="p-2.5">
+                      <div className="text-[11px] font-semibold text-navy">
                         {s.patient.age} · {s.patient.sex.charAt(0)} · {s.patient.side.charAt(0)}
                       </div>
-                      <div className="mt-0.5 text-[10px] text-muted truncate">{s.oa_classification}</div>
-                      {runningSample === s.source && (
-                        <div className="mt-1 text-[10px] text-accent font-medium">Running…</div>
-                      )}
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{
+                            backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#F97316', '#EF4444'][s.kl_grade],
+                          }}
+                        />
+                        <span className="text-[10px] text-muted truncate">{s.oa_classification}</span>
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -195,7 +224,7 @@ export default function NewAnalysis() {
           </div>
         </Card>
 
-        <Card title="2 — Patient Intake">
+        <Card eyebrow="Step 02" title="Patient Intake" icon="user" tone="slate">
           <div className="space-y-4">
             <div>
               <label className="label" htmlFor="name">Patient name</label>
@@ -240,7 +269,9 @@ export default function NewAnalysis() {
 
             <div className="flex items-center gap-3 pt-1">
               <button className="btn-primary" disabled={!ready || busy} onClick={run}>
-                {busy && <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />}
+                {busy
+                  ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  : <Icon name="sparkle" size={15} />}
                 {busy ? 'Running analysis…' : 'Run Analysis'}
               </button>
               {!ready && (

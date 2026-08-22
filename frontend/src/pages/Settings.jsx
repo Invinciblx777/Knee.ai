@@ -31,14 +31,14 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-[20px] font-semibold text-navy">Settings</h2>
+        <h2 className="page-title">Settings</h2>
         <p className="text-[13px] text-muted mt-1">
           Classification thresholds and the implant catalogue used for size matching.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="OA Classification Thresholds">
+        <Card eyebrow="Rules" title="OA Classification Thresholds" icon="activity" tone="amber">
           <table className="w-full border-collapse">
             <thead>
               <tr>
@@ -67,7 +67,7 @@ export default function Settings() {
           </ul>
         </Card>
 
-        <Card title="Overlay Colour Key">
+        <Card eyebrow="Legend" title="Overlay Colour Key" icon="layers" tone="blue">
           <div className="space-y-3">
             {[
               ['Femur', '#3B82F6', 'Distal femur zone, drawn above the joint line.'],
@@ -75,7 +75,12 @@ export default function Settings() {
               ['Tibia', '#EF4444', 'Proximal tibia zone with the ML width and slope indicator.'],
             ].map(([label, color, desc]) => (
               <div key={label} className="flex items-start gap-3">
-                <span className="w-4 h-4 rounded mt-0.5 shrink-0" style={{ backgroundColor: color }} />
+                <span
+                  className="w-8 h-8 rounded-lg mt-0.5 shrink-0 ring-1"
+                  style={{ backgroundColor: `${color}1A`, borderColor: color, boxShadow: `inset 0 0 0 1px ${color}55` }}
+                >
+                  <span className="block w-full h-full rounded-lg" style={{ backgroundColor: `${color}22` }} />
+                </span>
                 <div>
                   <div className="text-[13px] font-medium text-navy">{label}</div>
                   <div className="text-[12px] text-muted">{desc}</div>
@@ -91,7 +96,10 @@ export default function Settings() {
       </div>
 
       <Card
+        eyebrow="Reference"
         title="Implant Catalogue"
+        icon="implant"
+        tone="blue"
         action={
           <select className="input h-8 w-auto text-[13px]" value={system} onChange={(e) => setSystem(e.target.value)}>
             {db.systems.map((s) => (
@@ -121,7 +129,10 @@ export default function Settings() {
             <tbody>
               {active.sizes.map((s) => (
                 <tr key={s.size} className="row-hover">
-                  <td className="td font-semibold">{s.size}</td>
+                  <td className="td">
+                    <span className="inline-flex items-center justify-center min-w-[34px] h-7 px-2 rounded-lg
+                                     bg-page ring-1 ring-line text-[12px] font-bold text-navy">{s.size}</span>
+                  </td>
                   <td className="td">{s.femoral_ml} mm</td>
                   <td className="td">{s.femoral_ap} mm</td>
                   <td className="td">{s.tibial_ml} mm</td>

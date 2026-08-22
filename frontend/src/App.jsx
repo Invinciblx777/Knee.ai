@@ -14,9 +14,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white">
       <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
-      <div className="lg:pl-60">
+      <div className="lg:pl-[220px]">
         <Topbar onMenu={() => setNavOpen(true)} />
-        <main className="px-4 py-6 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
+        <main className="px-5 py-8 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/new" element={<NewAnalysis />} />

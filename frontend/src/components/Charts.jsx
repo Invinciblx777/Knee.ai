@@ -1,17 +1,22 @@
 import {
-  Bar, BarChart, CartesianGrid, Cell, Legend, PolarAngleAxis, PolarGrid,
+  Bar, BarChart, CartesianGrid, Legend, PolarAngleAxis, PolarGrid,
   PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 
 const AXIS = { fontSize: 11, fill: '#64748B' }
+const GRID = '#F1F5F9'
+
 const TOOLTIP = {
   contentStyle: {
-    borderRadius: 8, border: '1px solid #E2E8F0', fontSize: 12,
-    boxShadow: 'none', color: '#0F172A',
+    borderRadius: 10, border: '1px solid #E2E8F0', fontSize: 12,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)', color: '#1E293B',
   },
+  cursor: { fill: '#F8FAFC' },
 }
 
-export function ThicknessComparison({ rows, sex }) {
+const LEGEND = { fontSize: 11, paddingTop: 10, color: '#64748B' }
+
+export function ThicknessComparison({ rows }) {
   const data = rows.map((r) => ({
     name: r.label,
     Patient: r.patient,
@@ -22,17 +27,17 @@ export function ThicknessComparison({ rows, sex }) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 4 }} barGap={4}>
-        <CartesianGrid stroke="#E2E8F0" vertical={false} />
+        <CartesianGrid stroke={GRID} vertical={false} />
         <XAxis dataKey="name" tick={AXIS} tickLine={false} axisLine={{ stroke: '#E2E8F0' }} />
         <YAxis
           tick={AXIS} tickLine={false} axisLine={false} domain={[0, 7]}
           label={{ value: 'mm', angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
         />
         <Tooltip {...TOOLTIP} formatter={(v) => `${v} mm`} />
-        <Legend wrapperStyle={{ fontSize: 12, paddingTop: 6 }} />
-        <Bar dataKey="Patient" fill="#3B82F6" radius={[3, 3, 0, 0]} maxBarSize={26} isAnimationActive={false} />
-        <Bar dataKey="Male mean" fill="#0F172A" fillOpacity={0.28} radius={[3, 3, 0, 0]} maxBarSize={26} isAnimationActive={false} />
-        <Bar dataKey="Female mean" fill="#0F172A" fillOpacity={0.14} radius={[3, 3, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={7} />
+        <Bar dataKey="Patient" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Bar dataKey="Male mean" fill="#94A3B8" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Bar dataKey="Female mean" fill="#CBD5E1" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -52,38 +57,48 @@ export function ThicknessRadar({ rows, sex }) {
         <PolarGrid stroke="#E2E8F0" />
         <PolarAngleAxis dataKey="axis" tick={AXIS} />
         <PolarRadiusAxis domain={[0, 7]} tick={AXIS} axisLine={false} />
-        <Tooltip {...TOOLTIP} formatter={(v) => `${v} mm`} />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Radar name="Patient" dataKey="Patient" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.22} isAnimationActive={false} />
+        <Tooltip {...TOOLTIP} cursor={false} formatter={(v) => `${v} mm`} />
+        <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={7} />
+        <Radar
+          name="Patient" dataKey="Patient" stroke="#3B82F6" strokeWidth={2}
+          fill="#3B82F6" fillOpacity={0.1} isAnimationActive={false}
+        />
         <Radar
           name={`${isFemale ? 'Female' : 'Male'} population mean`}
-          dataKey="Population" stroke="#0F172A" strokeDasharray="4 3"
-          fill="#0F172A" fillOpacity={0.06} isAnimationActive={false}
+          dataKey="Population" stroke="#CBD5E1" strokeWidth={2} strokeDasharray="4 3"
+          fill="#CBD5E1" fillOpacity={0.08} isAnimationActive={false}
         />
       </RadarChart>
     </ResponsiveContainer>
   )
 }
 
+/**
+ * Match confidence reads as a ranked list, not a plotted chart: label left,
+ * percentage right, one full-width track per candidate and no axes.
+ */
 export function ConfidenceBars({ candidates }) {
-  const data = candidates.map((c) => ({
-    name: `${c.manufacturer.split(' ')[0]} ${c.size}`,
-    confidence: c.confidence_pct,
-  }))
-
   return (
-    <ResponsiveContainer width="100%" height={180}>
-      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 28, left: 8, bottom: 4 }}>
-        <CartesianGrid stroke="#E2E8F0" horizontal={false} />
-        <XAxis type="number" domain={[0, 100]} tick={AXIS} tickLine={false} axisLine={{ stroke: '#E2E8F0' }} unit="%" />
-        <YAxis type="category" dataKey="name" width={110} tick={AXIS} tickLine={false} axisLine={false} />
-        <Tooltip {...TOOLTIP} formatter={(v) => `${v}% match`} />
-        <Bar dataKey="confidence" radius={[0, 3, 3, 0]} maxBarSize={22} isAnimationActive={false}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={i === 0 ? '#3B82F6' : '#0F172A'} fillOpacity={i === 0 ? 1 : 0.25} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="space-y-4">
+      {candidates.map((c, i) => (
+        <div key={`${c.system_id}-${c.size}`}>
+          <div className="flex items-baseline justify-between gap-3 mb-2">
+            <span className="text-[13px] text-body">
+              <span className="font-medium text-navy">{c.manufacturer.split(' ')[0]}</span>{' '}
+              {c.size}
+            </span>
+            <span className={`text-[13px] font-bold ${i === 0 ? 'text-accent' : 'text-muted'}`}>
+              {c.confidence_pct}%
+            </span>
+          </div>
+          <div className="h-2.5 w-full rounded-full bg-line overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-150 ${i === 0 ? 'bg-accent' : 'bg-ink-300'}`}
+              style={{ width: `${c.confidence_pct}%` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }

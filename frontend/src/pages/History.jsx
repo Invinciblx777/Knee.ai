@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { deleteAnalysis, imageUrl, listAnalyses, reportUrl } from '../lib/api'
 import { Card, Empty, ErrorNote, ModeBadge, SeverityBadge, Spinner } from '../components/ui'
+import Icon from '../components/Icon'
 
 const FILTERS = ['All', 'Normal', 'Mild OA', 'Moderate OA', 'Severe OA']
 
@@ -37,10 +38,10 @@ export default function History() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-[20px] font-semibold text-navy">History</h2>
+          <h2 className="page-title">History</h2>
           <p className="text-[13px] text-muted mt-1">{items.length} stored analyses.</p>
         </div>
-        <Link to="/new" className="btn-primary">New Analysis</Link>
+        <Link to="/new" className="btn-primary"><Icon name="scan" size={15} />New Analysis</Link>
       </div>
 
       <ErrorNote>{error}</ErrorNote>
@@ -53,23 +54,33 @@ export default function History() {
         />
       ) : (
         <Card
+          eyebrow="Archive"
           title="Stored Analyses"
+          icon="history"
           action={
             <div className="flex flex-wrap items-center gap-2">
-              <input
-                className="input h-8 w-40 text-[13px]"
-                placeholder="Search patient"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
+              <div className="relative">
+                <Icon
+                  name="search" size={14}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-300 pointer-events-none"
+                />
+                <input
+                  className="input h-8 w-44 pl-8 text-[13px]"
+                  placeholder="Search patient"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </div>
               <div className="flex gap-1">
                 {FILTERS.map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
                     className={[
-                      'h-8 px-2.5 rounded-card border text-[12px] font-medium transition-colors',
-                      filter === f ? 'border-accent text-accent bg-accent/5' : 'border-line text-muted hover:bg-surface',
+                      'h-8 px-2.5 rounded-lg border text-[12px] font-semibold transition-all duration-150',
+                      filter === f
+                        ? 'border-accent/30 text-accent bg-accent-light'
+                        : 'border-line text-muted hover:bg-page hover:border-line-strong',
                     ].join(' ')}
                   >
                     {f}
@@ -101,35 +112,49 @@ export default function History() {
                       <img
                         src={imageUrl(r.thumbnail)}
                         alt=""
-                        className="w-10 h-10 object-cover rounded border border-line"
+                        className="w-11 h-11 object-cover rounded-lg ring-1 ring-line bg-stage"
                       />
                     </td>
                     <td className="td">
-                      <div className="font-medium">{r.patient.name}</div>
-                      <div className="text-muted text-[12px]">
+                      <div className="font-semibold text-navy">{r.patient.name}</div>
+                      <div className="text-muted text-[11px]">
                         {r.patient.age} · {r.patient.sex} · {r.patient.affected_side}
                       </div>
                     </td>
                     <td className="td text-muted">{r.created_at.replace('T', ' ')}</td>
                     <td className="td"><ModeBadge mode={r.mode} label={r.mode_label} size="sm" /></td>
                     <td className="td"><SeverityBadge value={r.classification} /></td>
-                    <td className="td font-semibold">{r.kl_grade}</td>
-                    <td className="td">{r.mean_thickness_mm.toFixed(2)} mm</td>
+                    <td className="td font-bold text-navy tnum">{r.kl_grade}</td>
+                    <td className="td tnum">{r.mean_thickness_mm.toFixed(2)} mm</td>
                     <td className="td">
                       {r.primary_implant}
                       <span className="text-muted"> · {r.confidence_pct}%</span>
                     </td>
                     <td className="td text-right whitespace-nowrap">
-                      <Link to={`/results/${r.analysis_id}`} className="text-accent font-medium text-[13px]">Open</Link>
-                      <a
-                        href={reportUrl(r.analysis_id)} target="_blank" rel="noreferrer"
-                        className="text-accent font-medium text-[13px] ml-3"
-                      >
-                        PDF
-                      </a>
-                      <button onClick={() => remove(r.analysis_id)} className="text-danger font-medium text-[13px] ml-3">
-                        Delete
-                      </button>
+                      <div className="inline-flex items-center gap-1">
+                        <Link
+                          to={`/results/${r.analysis_id}`}
+                          className="inline-flex items-center gap-1 h-7 px-2 rounded-lg text-accent
+                                     font-semibold text-[12px] transition-colors duration-150 hover:bg-accent-light"
+                        >
+                          Open
+                        </Link>
+                        <a
+                          href={reportUrl(r.analysis_id)} target="_blank" rel="noreferrer"
+                          className="inline-flex items-center gap-1 h-7 px-2 rounded-lg text-muted
+                                     font-semibold text-[12px] transition-colors duration-150 hover:bg-page hover:text-navy"
+                        >
+                          <Icon name="download" size={13} /> PDF
+                        </a>
+                        <button
+                          onClick={() => remove(r.analysis_id)}
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-ink-300
+                                     transition-colors duration-150 hover:bg-danger-light hover:text-danger"
+                          aria-label="Delete analysis"
+                        >
+                          <Icon name="trash" size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

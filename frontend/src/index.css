@@ -4,41 +4,107 @@
 
 @layer base {
   html { -webkit-font-smoothing: antialiased; }
+
   body {
-    @apply bg-white text-navy font-sans;
+    @apply bg-page text-body font-sans text-[13px];
+    /* Faint dot field keeps large empty areas from reading as dead space. */
+    background-image: radial-gradient(rgba(15, 23, 42, 0.055) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Numbers line up across tables and metric tiles. */
+  table, .tnum { font-variant-numeric: tabular-nums; }
+
+  ::selection { background: #DBEAFE; color: #0B1220; }
+
+  :focus-visible {
+    outline: 2px solid #3B82F6;
+    outline-offset: 2px;
+    border-radius: 6px;
   }
 }
 
 @layer components {
+  /* ---------- surfaces ---------- */
   .card {
-    @apply bg-white border border-line rounded-card;
+    @apply bg-surface border border-line rounded-card shadow-card;
+  }
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-lift hover:border-line-strong;
   }
   .card-pad { @apply p-5; }
-  .card-title {
-    @apply text-[13px] font-semibold uppercase tracking-wide text-muted;
+
+  .card-head {
+    @apply flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-line;
   }
-  .label {
-    @apply block text-[13px] font-medium text-navy mb-1.5;
+
+  /* ---------- type ---------- */
+  .page-title { @apply text-[26px] font-bold text-navy tracking-[-0.02em] leading-tight; }
+  .eyebrow {
+    @apply text-[10px] font-bold uppercase tracking-[0.13em] text-muted;
   }
+  .card-title { @apply text-[13px] font-semibold text-navy tracking-[-0.01em]; }
+  .card-sub { @apply text-[12px] text-muted leading-relaxed; }
+  .metric { @apply text-[34px] font-bold text-navy tracking-[-0.03em] leading-none tnum; }
+
+  /* ---------- forms ---------- */
+  .label { @apply block text-[12px] font-semibold text-body mb-1.5; }
   .input {
-    @apply w-full h-10 px-3 rounded-card border border-line bg-white text-[14px]
-           text-navy placeholder:text-muted/70 outline-none
-           focus:border-accent focus:ring-1 focus:ring-accent transition-colors;
+    @apply w-full h-10 px-3 rounded-[10px] border border-line bg-surface text-[13px]
+           text-body placeholder:text-muted/60 outline-none transition-all duration-150
+           hover:border-line-strong
+           focus:border-accent focus:ring-4 focus:ring-accent/10;
   }
+
+  /* ---------- buttons ---------- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 h-10 px-4 rounded-card whitespace-nowrap
-           text-[14px] font-medium transition-colors disabled:opacity-50
-           disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 h-9 px-4 rounded-[10px] whitespace-nowrap
+           text-[13px] font-semibold transition-all duration-150
+           disabled:opacity-45 disabled:cursor-not-allowed disabled:shadow-none;
   }
-  .btn-primary { @apply btn bg-accent text-white hover:bg-blue-600; }
-  .btn-dark { @apply btn bg-navy text-white hover:bg-slate-800; }
-  .btn-ghost { @apply btn border border-line text-navy hover:bg-surface; }
+  .btn-primary {
+    @apply btn bg-accent text-white shadow-[0_1px_2px_rgba(59,130,246,0.35)]
+           hover:bg-blue-600 active:translate-y-px;
+  }
+  .btn-dark {
+    @apply btn bg-navy text-white shadow-[0_1px_2px_rgba(11,18,32,0.25)]
+           hover:bg-accent active:translate-y-px;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-surface text-body hover:bg-page hover:border-line-strong;
+  }
+
+  /* ---------- tables ---------- */
   .th {
-    @apply text-left text-[11px] font-semibold uppercase tracking-wider
-           text-muted py-2.5 px-3 border-b border-line;
+    @apply text-left text-[11px] font-semibold uppercase tracking-[0.06em]
+           text-muted pb-2.5 px-3 border-b border-line;
   }
   .td {
-    @apply text-[13px] text-navy py-2.5 px-3 border-b border-line;
+    @apply text-[13px] text-body px-3 border-b border-line align-middle;
+    height: 52px;
   }
-  .row-hover { @apply hover:bg-surface transition-colors; }
+  .row-hover { @apply transition-colors duration-150 hover:bg-page/80; }
+
+  /* ---------- pills ---------- */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold whitespace-nowrap;
+  }
+  .pill-neg { @apply pill bg-danger-light text-danger; }
+  .pill-pos { @apply pill bg-ok-light text-ok; }
+  .pill-blue { @apply pill bg-accent-light text-accent; }
+  .pill-amber { @apply pill bg-warn-light text-warn; }
+
+  /* ---------- segmented control (overlay toggles) ---------- */
+  .segment {
+    @apply inline-flex items-center gap-2 h-8 px-3 rounded-lg text-[12px] font-medium
+           transition-all duration-150 border;
+  }
+  .segment-on { @apply segment bg-surface border-line-strong text-body shadow-card; }
+  .segment-off { @apply segment bg-transparent border-transparent text-muted hover:bg-surface/70; }
+
+  /* ---------- misc ---------- */
+  .divider { @apply h-px w-full bg-line; }
+  .stage {
+    @apply rounded-[10px] overflow-hidden bg-stage shadow-stage;
+  }
 }

@@ -6,21 +6,19 @@
   html { -webkit-font-smoothing: antialiased; }
 
   body {
-    @apply bg-page text-body font-sans text-[13px];
-    /* Faint dot field keeps large empty areas from reading as dead space. */
-    background-image: radial-gradient(rgba(15, 23, 42, 0.055) 1px, transparent 1px);
-    background-size: 22px 22px;
+    @apply bg-page text-body font-sans text-[14px];
+    letter-spacing: 0.01em;
   }
 
   /* Numbers line up across tables and metric tiles. */
   table, .tnum { font-variant-numeric: tabular-nums; }
 
-  ::selection { background: #DBEAFE; color: #0B1220; }
+  ::selection { background: #E5E2DC; color: #171717; }
 
   :focus-visible {
-    outline: 2px solid #3B82F6;
+    outline: 2px solid #D05C35;
     outline-offset: 2px;
-    border-radius: 6px;
+    border-radius: 4px;
   }
 }
 
@@ -30,81 +28,80 @@
     @apply bg-surface border border-line rounded-card shadow-card;
   }
   .card-hover {
-    @apply transition-all duration-200 hover:shadow-lift hover:border-line-strong;
+    @apply transition-all duration-300 hover:shadow-lift hover:border-line-strong;
   }
-  .card-pad { @apply p-5; }
+  .card-pad { @apply p-6; }
 
   .card-head {
-    @apply flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-line;
+    @apply flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-line;
   }
 
   /* ---------- type ---------- */
-  .page-title { @apply text-[26px] font-bold text-navy tracking-[-0.02em] leading-tight; }
+  .page-title { @apply text-[28px] font-serif font-medium text-navy tracking-tight leading-tight; }
   .eyebrow {
-    @apply text-[10px] font-bold uppercase tracking-[0.13em] text-muted;
+    @apply text-[10px] font-bold uppercase tracking-widest text-muted;
   }
-  .card-title { @apply text-[13px] font-semibold text-navy tracking-[-0.01em]; }
-  .card-sub { @apply text-[12px] text-muted leading-relaxed; }
-  .metric { @apply text-[34px] font-bold text-navy tracking-[-0.03em] leading-none tnum; }
+  .card-title { @apply text-[15px] font-serif font-medium text-navy tracking-normal; }
+  .card-sub { @apply text-[13px] text-muted leading-relaxed font-light; }
+  .metric { @apply text-[36px] font-serif font-medium text-navy tracking-tight leading-none tnum; }
 
   /* ---------- forms ---------- */
-  .label { @apply block text-[12px] font-semibold text-body mb-1.5; }
+  .label { @apply block text-[13px] font-medium text-navy mb-2; }
   .input {
-    @apply w-full h-10 px-3 rounded-[10px] border border-line bg-surface text-[13px]
-           text-body placeholder:text-muted/60 outline-none transition-all duration-150
+    @apply w-full h-10 px-3 rounded-md border border-line bg-surface text-[14px]
+           text-navy placeholder:text-muted/60 outline-none transition-all duration-200
            hover:border-line-strong
-           focus:border-accent focus:ring-4 focus:ring-accent/10;
+           focus:border-accent focus:ring-2 focus:ring-accent/10;
   }
 
   /* ---------- buttons ---------- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 h-9 px-4 rounded-[10px] whitespace-nowrap
-           text-[13px] font-semibold transition-all duration-150
+    @apply inline-flex items-center justify-center gap-2 h-9 px-4 rounded-md whitespace-nowrap
+           text-[13px] font-medium transition-all duration-200
            disabled:opacity-45 disabled:cursor-not-allowed disabled:shadow-none;
   }
+  /* Primary buttons use charcoal (Anthropic style) */
   .btn-primary {
-    @apply btn bg-accent text-white shadow-[0_1px_2px_rgba(59,130,246,0.35)]
-           hover:bg-blue-600 active:translate-y-px;
+    @apply btn bg-navy text-white shadow-sm hover:bg-black hover:shadow-md active:translate-y-px;
   }
   .btn-dark {
-    @apply btn bg-navy text-white shadow-[0_1px_2px_rgba(11,18,32,0.25)]
-           hover:bg-accent active:translate-y-px;
+    @apply btn bg-navy text-white shadow-sm hover:bg-black active:translate-y-px;
   }
   .btn-ghost {
-    @apply btn border border-line bg-surface text-body hover:bg-page hover:border-line-strong;
+    @apply btn border border-line bg-surface text-navy hover:bg-page hover:border-line-strong shadow-sm;
   }
 
   /* ---------- tables ---------- */
   .th {
-    @apply text-left text-[11px] font-semibold uppercase tracking-[0.06em]
-           text-muted pb-2.5 px-3 border-b border-line;
+    @apply text-left text-[11px] font-medium uppercase tracking-wider
+           text-muted pb-3 px-4 border-b border-line;
   }
   .td {
-    @apply text-[13px] text-body px-3 border-b border-line align-middle;
-    height: 52px;
+    @apply text-[14px] text-body px-4 border-b border-line align-middle font-light;
+    height: 56px;
   }
-  .row-hover { @apply transition-colors duration-150 hover:bg-page/80; }
+  .row-hover { @apply transition-colors duration-200 hover:bg-stage; }
 
   /* ---------- pills ---------- */
   .pill {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold whitespace-nowrap;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium whitespace-nowrap border;
   }
-  .pill-neg { @apply pill bg-danger-light text-danger; }
-  .pill-pos { @apply pill bg-ok-light text-ok; }
-  .pill-blue { @apply pill bg-accent-light text-accent; }
-  .pill-amber { @apply pill bg-warn-light text-warn; }
+  .pill-neg { @apply pill bg-danger-light text-danger border-danger/20; }
+  .pill-pos { @apply pill bg-ok-light text-ok border-ok/20; }
+  .pill-blue { @apply pill bg-accent-light text-accent border-accent/20; }
+  .pill-amber { @apply pill bg-warn-light text-warn border-warn/20; }
 
   /* ---------- segmented control (overlay toggles) ---------- */
   .segment {
-    @apply inline-flex items-center gap-2 h-8 px-3 rounded-lg text-[12px] font-medium
-           transition-all duration-150 border;
+    @apply inline-flex items-center gap-2 h-8 px-3 rounded-md text-[13px] font-medium
+           transition-all duration-200 border;
   }
-  .segment-on { @apply segment bg-surface border-line-strong text-body shadow-card; }
-  .segment-off { @apply segment bg-transparent border-transparent text-muted hover:bg-surface/70; }
+  .segment-on { @apply segment bg-surface border-line-strong text-navy shadow-sm; }
+  .segment-off { @apply segment bg-transparent border-transparent text-muted hover:bg-line/40 hover:text-navy; }
 
   /* ---------- misc ---------- */
   .divider { @apply h-px w-full bg-line; }
   .stage {
-    @apply rounded-[10px] overflow-hidden bg-stage shadow-stage;
+    @apply rounded-[12px] overflow-hidden bg-stage shadow-stage border border-line;
   }
 }

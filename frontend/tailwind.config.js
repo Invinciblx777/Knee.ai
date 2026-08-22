@@ -4,43 +4,44 @@ export default {
   theme: {
     extend: {
       colors: {
-        page: '#F6F8FB',
+        page: '#FDFCF6', // Anthropic creamy background
         surface: '#FFFFFF',
-        line: '#E6EBF2',
-        'line-strong': '#D3DCE8',
-        navy: '#0B1220',
-        body: '#1E293B',
-        muted: '#64748B',
+        line: '#E5E2DC',
+        'line-strong': '#D4D0C5',
+        navy: '#171717', // Deep charcoal
+        body: '#3E3E3E', // Warm dark gray
+        muted: '#6E6A64', // Earthy gray
 
-        accent: '#3B82F6',
-        'accent-light': '#EFF6FF',
-        ok: '#10B981',
-        'ok-light': '#F0FDF4',
-        danger: '#EF4444',
-        'danger-light': '#FEF2F2',
-        warn: '#F59E0B',
-        'warn-light': '#FFFBEB',
+        accent: '#D05C35', // Elegant terracotta/rust
+        'accent-light': '#F9EDE9',
+        ok: '#147D5F', // Deep, clinical green (MyHealthPrac inspired)
+        'ok-light': '#E9F5F0',
+        danger: '#B33A3A',
+        'danger-light': '#FCEBEB',
+        warn: '#B97116',
+        'warn-light': '#FDF2E2',
 
-        stage: '#0A0F1A',
+        stage: '#F7F5F0',
 
         ink: {
-          100: '#F1F5F9',
-          300: '#CBD5E1',
-          400: '#94A3B8',
-          600: '#475569',
-          700: '#334155',
-          800: '#1E293B',
-          900: '#111A2B',
+          100: '#F0EFEB',
+          300: '#D5D3CC',
+          400: '#B0AEA6',
+          600: '#6E6A64',
+          700: '#4D4A45',
+          800: '#3E3E3E',
+          900: '#171717',
         },
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['Newsreader', 'ui-serif', 'Georgia', 'serif'],
       },
-      borderRadius: { card: '12px', xl2: '16px' },
+      borderRadius: { card: '8px', xl2: '12px' },
       boxShadow: {
-        card: '0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.06)',
-        lift: '0 6px 16px -4px rgba(16,24,40,0.10), 0 2px 6px rgba(16,24,40,0.05)',
-        stage: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+        card: '0 2px 8px -2px rgba(23, 23, 23, 0.04), 0 1px 2px rgba(23, 23, 23, 0.02)',
+        lift: '0 8px 24px -4px rgba(23, 23, 23, 0.06), 0 4px 8px rgba(23, 23, 23, 0.04)',
+        stage: 'inset 0 0 0 1px rgba(0,0,0,0.03)',
       },
       keyframes: {
         'fade-up': {
@@ -56,7 +57,7 @@ export default {
         },
       },
       animation: {
-        'fade-up': 'fade-up 260ms cubic-bezier(0.16,1,0.3,1) both',
+        'fade-up': 'fade-up 360ms cubic-bezier(0.2,1,0.3,1) both',
         'pulse-dot': 'pulseDot 2s ease-in-out infinite',
       },
     },

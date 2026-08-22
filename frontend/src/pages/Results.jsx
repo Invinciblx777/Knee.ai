@@ -413,31 +413,43 @@ export default function Results() {
             <p className="mt-2 text-[12px] text-muted font-display">{primary.type}</p>
           </Tile>
 
-          <div className="card card-pad">
-            <p className="eyebrow mb-3">Bone Measurements</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {[
-                ['Femoral ML', bones.femoral_ml_mm, 'mm'],
-                ['Femoral AP', bones.femoral_ap_mm, 'mm'],
-                ['Tibial ML', bones.tibial_ml_mm, 'mm'],
-                ['Tibial AP', bones.tibial_ap_mm, 'mm'],
-                ['Tibial Slope', bones.tibial_slope_deg, '°'],
-              ].map(([k, v, u]) => (
-                <div
-                  key={k}
-                  className="rounded-[10px] bg-page px-3 py-2.5
-                             transition-colors duration-150 hover:bg-surface"
-                  style={{ border: '2px solid #2D2016' }}
-                >
-                  <div className="eyebrow text-[9px]">{k}</div>
-                  <div className="mt-1 text-[18px] font-display font-bold text-navy leading-none tnum">
-                    {v}<span className="text-[11px] font-semibold text-muted ml-1">{u}</span>
-                  </div>
+          <div className="flex flex-col gap-4">
+            {result.advice && (
+              <Tile
+                label="Doctor's Advice"
+                icon="file"
+                tone="green"
+              >
+                <div className="text-[13px] text-navy font-display leading-relaxed whitespace-pre-wrap mt-2">
+                  {result.advice}
                 </div>
-              ))}
-            </div>
+              </Tile>
+            )}
+            
+            <Tile label="Bone Measurements" icon="activity" tone="amber">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+                {[
+                  ['Femoral ML', bones.femoral_ml_mm, 'mm'],
+                  ['Femoral AP', bones.femoral_ap_mm, 'mm'],
+                  ['Tibial ML', bones.tibial_ml_mm, 'mm'],
+                  ['Tibial AP', bones.tibial_ap_mm, 'mm'],
+                  ['Tibial Slope', bones.tibial_slope_deg, '°'],
+                ].map(([k, v, u]) => (
+                  <div
+                    key={k}
+                    className="rounded-[10px] bg-page px-3 py-2.5
+                               transition-colors duration-150 hover:bg-surface"
+                    style={{ border: '2px solid #2D2016' }}
+                  >
+                    <div className="eyebrow text-[9px]">{k}</div>
+                    <div className="mt-1 text-[18px] font-display font-bold text-navy leading-none tnum">
+                      {v}<span className="text-[11px] font-semibold text-muted ml-1">{u}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Tile>
           </div>
-        </div>
 
         <Card eyebrow="Implant Catalogue" title="Implant Size Matching" icon="implant" tone="blue">
           <ImplantTable implant={result.implant} />

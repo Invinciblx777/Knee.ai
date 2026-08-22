@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, createContext } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import Sidebar from './components/Sidebar'
@@ -9,6 +9,8 @@ import History from './pages/History'
 import Settings from './pages/Settings'
 import Results from './pages/Results'
 import Auth from './pages/Auth'
+
+export const AuthContext = createContext(null)
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false)
@@ -39,21 +41,23 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-page">
-      <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
-      <div className="lg:pl-[220px]">
-        <Topbar onMenu={() => setNavOpen(true)} />
-        <main className="px-5 py-8 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/new" element={<NewAnalysis />} />
-            <Route path="/results/:id" element={<Results />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+    <AuthContext.Provider value={{ session, userRole: session?.user?.user_metadata?.role || 'patient' }}>
+      <div className="min-h-screen bg-page">
+        <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
+        <div className="lg:pl-[220px]">
+          <Topbar onMenu={() => setNavOpen(true)} />
+          <main className="px-5 py-8 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/new" element={<NewAnalysis />} />
+              <Route path="/results/:id" element={<Results />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+    </AuthContext.Provider>
   )
 }

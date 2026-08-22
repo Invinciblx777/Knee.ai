@@ -1,17 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { deleteAnalysis, imageUrl, listAnalyses, getAnalysis, downloadReport } from '../lib/api'
+import { deleteAnalysis, imageUrl, listAnalyses, getAnalysis, downloadReport, updateAdvice } from '../lib/api'
 import { Card, Empty, ErrorNote, SeverityBadge, Spinner } from '../components/ui'
 import Icon from '../components/Icon'
+import { AuthContext } from '../App'
 
 const FILTERS = ['All', 'Normal', 'Mild OA', 'Moderate OA', 'Severe OA']
 
 export default function History() {
+  const { userRole } = useContext(AuthContext)
+  const isDoctor = userRole === 'doctor'
+
   const [items, setItems] = useState(null)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')
   const [downloadingId, setDownloadingId] = useState(null)
+  const [adviceModal, setAdviceModal] = useState({ open: false, id: null, text: '' })
 
   const load = () => listAnalyses().then((d) => setItems(d.items)).catch((e) => setError(e.message))
   useEffect(() => { load() }, [])
@@ -36,6 +41,16 @@ export default function History() {
       setError('Failed to download report: ' + e.message)
     } finally {
       setDownloadingId(null)
+    }
+  }
+
+  async function saveAdvice() {
+    try {
+      await updateAdvice(adviceModal.id, adviceModal.text)
+      setItems(items.map(i => i.analysis_id === adviceModal.id ? { ...i, advice: adviceModal.text } : i))
+      setAdviceModal({ open: false, id: null, text: '' })
+    } catch (e) {
+      setError('Failed to save advice: ' + e.message)
     }
   }
 
@@ -161,6 +176,17 @@ export default function History() {
                         >
                           <Icon name="download" size={13} /> {downloadingId === r.analysis_id ? 'Wait...' : 'PDF'}
                         </button>
+
+                        {isDoctor && (
+                          <button
+                            onClick={() => setAdviceModal({ open: true, id: r.analysis_id, text: r.advice || '' })}
+                            className="inline-flex items-center gap-1 h-7 px-2 rounded-[8px] text-accent
+                                       font-display font-semibold text-[12px] transition-colors duration-150 hover:bg-accent-light"
+                          >
+                            <Icon name="edit" size={13} /> Advice
+                          </button>
+                        )}
+
                         <button
                           onClick={() => remove(r.analysis_id)}
                           className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] text-ink-300
@@ -182,6 +208,33 @@ export default function History() {
             </table>
           </div>
         </Card>
+      )}
+      {adviceModal.open && (
+        <div className="fixed inset-0 z-50 bg-navy/20 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[16px] shadow-xl p-6 w-full max-w-md" style={{ border: '3px solid #2D2016' }}>
+            <h3 className="font-serif text-lg text-navy mb-4 font-bold">Add Medical Advice</h3>
+            <textarea
+              className="input w-full h-32 resize-none text-[13px] p-3 mb-4"
+              placeholder="Type your notes or advice here..."
+              value={adviceModal.text}
+              onChange={e => setAdviceModal({ ...adviceModal, text: e.target.value })}
+            />
+            <div className="flex gap-2 justify-end">
+              <button 
+                className="px-4 py-2 rounded-[8px] text-[13px] font-display font-semibold text-muted hover:bg-page"
+                onClick={() => setAdviceModal({ open: false, id: null, text: '' })}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-primary px-6"
+                onClick={saveAdvice}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

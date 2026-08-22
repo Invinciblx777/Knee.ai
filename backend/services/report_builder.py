@@ -156,6 +156,24 @@ def _patient_block(story, s, record):
     t = Table(rows, colWidths=[52 * mm, 22 * mm, 26 * mm, 34 * mm, 36 * mm])
     t.setStyle(_table_style())
     story.append(t)
+    story.append(Spacer(1, 8))
+
+def _advice_block(story, s, record):
+    advice = record.get("advice")
+    if not advice:
+        return
+        
+    story.append(Paragraph("Doctor's Advice", s["h2"]))
+    
+    # We use a table to give it a nice background and border
+    t = Table([[Paragraph(advice.replace("\n", "<br/>"), s["body"])]], colWidths=[170 * mm])
+    style = _table_style(header=False)
+    style.add("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#ECFDF5")) # light green background
+    style.add("BOX", (0, 0), (-1, -1), 0.6, GREEN)
+    t.setStyle(style)
+    
+    story.append(t)
+    story.append(Spacer(1, 8))
 
 
 def _findings_block(story, s, record):
@@ -293,6 +311,7 @@ def build_report(record: Dict, image_dir: str, out_path: str) -> str:
     story = []
     _header(story, s, record)
     _patient_block(story, s, record)
+    _advice_block(story, s, record)
     _findings_block(story, s, record)
     _implant_block(story, s, record)
     story.append(PageBreak())

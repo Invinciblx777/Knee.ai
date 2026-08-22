@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { supabase } from './lib/supabase'
+import { configError, supabase } from './lib/supabase'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
@@ -19,6 +19,11 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (configError) {
+      setLoading(false)
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
@@ -32,6 +37,20 @@ export default function App() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  if (configError) {
+    return (
+      <div className="min-h-screen bg-page flex items-center justify-center p-6">
+        <div
+          className="max-w-md rounded-[12px] bg-danger-light px-5 py-4"
+          style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}
+        >
+          <p className="text-[14px] font-display font-bold text-navy">Configuration error</p>
+          <p className="mt-2 text-[13px] text-navy font-display leading-relaxed">{configError}</p>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return <div className="min-h-screen bg-page flex items-center justify-center text-muted font-display text-sm">Loading...</div>

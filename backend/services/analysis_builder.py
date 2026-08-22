@@ -11,6 +11,7 @@ import uuid
 from typing import Dict, List, Optional
 
 from services import image_processor as ip
+from services import quality as q
 from services import sample_registry as sr
 from services.implant_matcher import (
     describe_candidate,
@@ -113,6 +114,10 @@ def build_simulated(img, data_digest: str, filename: str, patient: Dict, image, 
         },
     )
     record["images"]["roi"] = roi
+
+    image_quality = q.assess_image_quality(image, roi)
+    record["quality"] = image_quality
+    record["uncertainty"] = q.measurement_uncertainty(image_quality, per_pixel_segmentation=False)
     return record
 
 
@@ -206,4 +211,18 @@ def build_from_sample(sample: Dict, filename: str, patient_override: Optional[Di
         },
     )
     record["sample_source"] = sample["source"]
+
+    # Polygons come from the model output, so quality is scored over their extent.
+    poly_roi = ip.polygon_zones(polygons)
+    hull = {
+        "x": min(z["x"] for z in poly_roi.values()),
+        "y": min(z["y"] for z in poly_roi.values()),
+        "detected": True,
+    }
+    hull["w"] = max(z["x"] + z["w"] for z in poly_roi.values()) - hull["x"]
+    hull["h"] = max(z["y"] + z["h"] for z in poly_roi.values()) - hull["y"]
+
+    image_quality = q.assess_image_quality(image, hull)
+    record["quality"] = image_quality
+    record["uncertainty"] = q.measurement_uncertainty(image_quality, per_pixel_segmentation=True)
     return record

@@ -10,6 +10,98 @@ import { ConfidenceBars, ThicknessComparison, ThicknessRadar } from '../componen
 
 const KL_COLOR = ['#2D9F6F', '#E8772E', '#D4A017', '#E85D75', '#E85D75']
 
+const QUALITY_TONE = { good: 'bg-ok', fair: 'bg-warn', low: 'bg-danger' }
+
+/** Banner shown when the film is too degraded to trust the automated numbers. */
+function ReviewBanner({ quality }) {
+  const weak = quality.factors.filter((f) => f.status === 'low')
+  return (
+    <div
+      className="rounded-[12px] bg-warn-light px-4 py-3.5 flex items-start gap-3"
+      style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}
+    >
+      <Icon name="alert" size={17} className="text-warn mt-px shrink-0" />
+      <div>
+        <p className="text-[13px] font-display font-bold text-navy">Clinical review recommended</p>
+        <p className="mt-1 text-[12px] text-muted font-display leading-relaxed">
+          Image quality scored {quality.score_pct}% ({quality.level_label.toLowerCase()})
+          {weak.length > 0 && <> — limiting {weak.map((f) => f.name.toLowerCase()).join(' and ')}</>}.
+          Verify each measurement against the overlay before acting on it.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/** Per-factor image quality breakdown plus the tolerance bands it implies. */
+function QualityCard({ quality, uncertainty }) {
+  return (
+    <Card
+      eyebrow="Measurement Confidence"
+      title="Image Quality & Uncertainty"
+      icon="shield"
+      tone={quality.level === 'good' ? 'green' : quality.level === 'acceptable' ? 'amber' : 'red'}
+      action={
+        <span
+          className="inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1
+                     text-[12px] font-display font-semibold bg-surface text-navy"
+          style={{ border: '2px solid #2D2016' }}
+        >
+          <span className={`w-2 h-2 rounded-full ${QUALITY_TONE[_statusOf(quality.level)]}`} />
+          {quality.score_pct}% · {quality.level_label}
+        </span>
+      }
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {quality.factors.map((f) => (
+          <div
+            key={f.name}
+            className="rounded-[10px] bg-page px-3 py-2.5"
+            style={{ border: '2px solid #2D2016' }}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="eyebrow text-[9px]">{f.name}</span>
+              <span className="text-[11px] font-display font-bold text-navy tnum">{f.score_pct}%</span>
+            </div>
+            <div
+              className="mt-2 h-1.5 rounded-full bg-ink-100 overflow-hidden"
+              style={{ border: '1px solid #2D2016' }}
+            >
+              <div
+                className={`h-full rounded-full ${QUALITY_TONE[f.status]}`}
+                style={{ width: `${f.score_pct}%` }}
+              />
+            </div>
+            <div className="mt-2 text-[10px] text-muted font-display leading-tight">{f.detail}</div>
+          </div>
+        ))}
+      </div>
+
+      {uncertainty && (
+        <>
+          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+            {[
+              ['Meniscus thickness', `±${uncertainty.meniscus_mm} mm`],
+              ['Bone dimensions', `±${uncertainty.bone_mm} mm`],
+              ['Tibial slope', `±${uncertainty.slope_deg}°`],
+            ].map(([k, v]) => (
+              <div key={k} className="text-[13px] font-display">
+                <span className="text-muted">{k} </span>
+                <span className="text-navy font-bold tnum ml-0.5">{v}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] text-muted font-display">{uncertainty.basis}</p>
+        </>
+      )}
+    </Card>
+  )
+}
+
+function _statusOf(level) {
+  return level === 'good' ? 'good' : level === 'acceptable' ? 'fair' : 'low'
+}
+
 /** Big labelled divider so the two clinical modules read as separate sections. */
 function ModuleHeader({ n, title, subtitle, tone }) {
   return (
@@ -285,6 +377,8 @@ export default function Results() {
     <div className="space-y-8 animate-fade-up">
       <PatientHeader result={result} onGetAdvice={handleGetAdvice} gettingAdvice={gettingAdvice} />
 
+      {result.quality?.review_recommended && <ReviewBanner quality={result.quality} />}
+
       {result.advice && (
         <Card eyebrow="Clinician Note" title="Doctor's Advice" icon="file" tone="green">
           <p className="text-[13px] text-navy font-display leading-relaxed whitespace-pre-wrap">{result.advice}</p>
@@ -388,6 +482,11 @@ export default function Results() {
             <div className="metric">
               {a.mean_thickness_mm.toFixed(2)}
               <span className="text-[15px] font-semibold text-muted ml-1.5 tracking-normal">mm</span>
+              {result.uncertainty && (
+                <span className="text-[13px] font-semibold text-muted ml-2 tracking-normal tnum">
+                  ±{result.uncertainty.meniscus_mm}
+                </span>
+              )}
             </div>
             <div
               className="mt-4 h-2 rounded-full bg-ink-100 overflow-hidden"
@@ -438,6 +537,10 @@ export default function Results() {
           ═══════════════════════════════════════════════════════ */}
       <Viewer result={result} />
 
+      {result.quality && (
+        <QualityCard quality={result.quality} uncertainty={result.uncertainty} />
+      )}
+
       {/* ═══════════════════════════════════════════════════════
           MODULE 2 — Femur/tibia measurements + implant sizing
           ═══════════════════════════════════════════════════════ */}
@@ -472,6 +575,11 @@ export default function Results() {
                 <div className="eyebrow text-[9px]">{k}</div>
                 <div className="mt-1.5 text-[20px] font-display font-bold text-navy leading-none tnum">
                   {v}<span className="text-[11px] font-semibold text-muted ml-1">{u}</span>
+                  {result.uncertainty && (
+                    <span className="text-[11px] font-semibold text-muted ml-1.5">
+                      ±{u === '°' ? result.uncertainty.slope_deg : result.uncertainty.bone_mm}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1.5 text-[10px] text-muted font-display leading-tight">{desc}</div>
               </div>

@@ -3,18 +3,20 @@ import {
   PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 
-const AXIS = { fontSize: 11, fill: '#64748B' }
-const GRID = '#F1F5F9'
+const AXIS = { fontSize: 11, fill: '#8B7D6B', fontFamily: 'Space Grotesk, sans-serif' }
+const GRID = '#E8DCC8'
 
 const TOOLTIP = {
   contentStyle: {
-    borderRadius: 10, border: '1px solid #E2E8F0', fontSize: 12,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.06)', color: '#1E293B',
+    borderRadius: 10, border: '2px solid #2D2016', fontSize: 12,
+    boxShadow: '3px 3px 0 #2D2016', color: '#1A130D',
+    fontFamily: 'Space Grotesk, sans-serif',
+    backgroundColor: '#FFFCF7',
   },
-  cursor: { fill: '#F8FAFC' },
+  cursor: { fill: '#FFF5E4' },
 }
 
-const LEGEND = { fontSize: 11, paddingTop: 10, color: '#64748B' }
+const LEGEND = { fontSize: 11, paddingTop: 10, color: '#8B7D6B', fontFamily: 'Space Grotesk, sans-serif' }
 
 export function ThicknessComparison({ rows }) {
   const data = rows.map((r) => ({
@@ -28,16 +30,16 @@ export function ThicknessComparison({ rows }) {
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 4 }} barGap={4}>
         <CartesianGrid stroke={GRID} vertical={false} />
-        <XAxis dataKey="name" tick={AXIS} tickLine={false} axisLine={{ stroke: '#E2E8F0' }} />
+        <XAxis dataKey="name" tick={AXIS} tickLine={false} axisLine={{ stroke: '#E8DCC8' }} />
         <YAxis
           tick={AXIS} tickLine={false} axisLine={false} domain={[0, 7]}
           label={{ value: 'mm', angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
         />
         <Tooltip {...TOOLTIP} formatter={(v) => `${v} mm`} />
         <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={7} />
-        <Bar dataKey="Patient" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
-        <Bar dataKey="Male mean" fill="#94A3B8" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
-        <Bar dataKey="Female mean" fill="#CBD5E1" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Bar dataKey="Patient" fill="#E8772E" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Bar dataKey="Male mean" fill="#B0A28E" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
+        <Bar dataKey="Female mean" fill="#D5C9B5" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   )
@@ -54,19 +56,19 @@ export function ThicknessRadar({ rows, sex }) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <RadarChart data={data} outerRadius="72%">
-        <PolarGrid stroke="#E2E8F0" />
+        <PolarGrid stroke="#E8DCC8" />
         <PolarAngleAxis dataKey="axis" tick={AXIS} />
         <PolarRadiusAxis domain={[0, 7]} tick={AXIS} axisLine={false} />
         <Tooltip {...TOOLTIP} cursor={false} formatter={(v) => `${v} mm`} />
         <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={7} />
         <Radar
-          name="Patient" dataKey="Patient" stroke="#3B82F6" strokeWidth={2}
-          fill="#3B82F6" fillOpacity={0.1} isAnimationActive={false}
+          name="Patient" dataKey="Patient" stroke="#E8772E" strokeWidth={2}
+          fill="#E8772E" fillOpacity={0.15} isAnimationActive={false}
         />
         <Radar
           name={`${isFemale ? 'Female' : 'Male'} population mean`}
-          dataKey="Population" stroke="#CBD5E1" strokeWidth={2} strokeDasharray="4 3"
-          fill="#CBD5E1" fillOpacity={0.08} isAnimationActive={false}
+          dataKey="Population" stroke="#D5C9B5" strokeWidth={2} strokeDasharray="4 3"
+          fill="#D5C9B5" fillOpacity={0.08} isAnimationActive={false}
         />
       </RadarChart>
     </ResponsiveContainer>
@@ -83,15 +85,18 @@ export function ConfidenceBars({ candidates }) {
       {candidates.map((c, i) => (
         <div key={`${c.system_id}-${c.size}`}>
           <div className="flex items-baseline justify-between gap-3 mb-2">
-            <span className="text-[13px] text-body">
-              <span className="font-medium text-navy">{c.manufacturer.split(' ')[0]}</span>{' '}
+            <span className="text-[13px] text-body font-display">
+              <span className="font-semibold text-navy">{c.manufacturer.split(' ')[0]}</span>{' '}
               {c.size}
             </span>
-            <span className={`text-[13px] font-bold ${i === 0 ? 'text-accent' : 'text-muted'}`}>
+            <span className={`text-[13px] font-display font-bold ${i === 0 ? 'text-accent' : 'text-muted'}`}>
               {c.confidence_pct}%
             </span>
           </div>
-          <div className="h-2.5 w-full rounded-full bg-line overflow-hidden">
+          <div
+            className="h-3 w-full rounded-full bg-ink-100 overflow-hidden"
+            style={{ border: '1px solid #2D2016' }}
+          >
             <div
               className={`h-full rounded-full transition-all duration-150 ${i === 0 ? 'bg-accent' : 'bg-ink-300'}`}
               style={{ width: `${c.confidence_pct}%` }}

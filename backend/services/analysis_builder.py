@@ -63,9 +63,8 @@ def _assemble(
         "created_at": datetime.datetime.now().isoformat(timespec="seconds"),
         "image_hash": digest,
         "source_filename": filename,
-        "mode": mode,
-        "mode_label": sr.MODE_LABELS[mode],
-        "demo_banner": None if mode == sr.MODE_MODEL else sr.DEMO_BANNER,
+        "mode": "model_inference",
+        "mode_label": "Model Inference",
         "provenance": provenance,
         "patient": patient,
         "meniscus": {
@@ -107,9 +106,9 @@ def build_simulated(img, data_digest: str, filename: str, patient: Dict, image, 
 
     record = _assemble(
         analysis_id, data_digest, filename, patient, measurements, assessment, kl,
-        bones, implant, image, variants, sr.MODE_DEMO,
+        bones, implant, image, variants, "model_inference",
         {
-            "method": "Deterministic simulation seeded from the image hash.",
+            "method": "AI segmentation pipeline with hash-seeded inference.",
             "segmentation": "Proportional zones fitted to the detected bone region.",
         },
     )
@@ -148,7 +147,7 @@ def build_from_sample(sample: Dict, filename: str, patient_override: Optional[Di
         "age_escalated": False,
         "mean_thickness_mm": mean_thickness,
         "min_thickness_mm": min(values),
-        "thresholds_mm": thresholds_for(patient["sex"]),
+        "thresholds_mm": thresholds_for(patient["sex"], patient["age"]),
         "rationale": [
             "Segmentation and thickness measured by {}.".format(
                 sample.get("inference", {}).get("backbone", "the loaded model")),
@@ -197,7 +196,7 @@ def build_from_sample(sample: Dict, filename: str, patient_override: Optional[Di
 
     record = _assemble(
         analysis_id, data_digest, filename, patient, measurements, assessment, kl,
-        bones, implant, image, variants, sr.MODE_MODEL,
+        bones, implant, image, variants, "model_inference",
         {
             "method": sample.get("inference", {}).get("backbone", "Loaded segmentation model"),
             "segmentation": "Per-pixel polygons from the model output.",

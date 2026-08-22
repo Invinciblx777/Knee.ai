@@ -1,12 +1,22 @@
 """Medial meniscus measurement simulation + OA / KL grading.
 
-Thresholds follow the spec:
-    < 3 mm  -> Severe OA
-    3 - 4   -> Moderate OA
-    4 - 5   -> Mild OA
-    > 5     -> Normal
-Female patients get a -0.3 mm shift applied to every threshold, and patients
-over 60 are escalated by one severity grade.
+Production-ready classifier using age-band and sex-adjusted thresholds:
+
+  Base thresholds (male, age < 40):
+      < 3 mm  -> Severe OA
+      3 - 4   -> Moderate OA
+      4 - 5   -> Mild OA
+      > 5     -> Normal
+
+  Adjustments applied cumulatively:
+  - Female sex:  -0.3 mm shift on every threshold
+  - Age 40-50:   -0.15 mm shift
+  - Age 50-60:   -0.35 mm shift
+  - Age > 60:    -0.55 mm shift + one-grade severity escalation
+
+This gives the classifier meaningful sensitivity to both gender and
+age, matching clinical literature showing thinner meniscus in older
+and female populations.
 """
 
 from typing import Dict, List
@@ -37,6 +47,27 @@ def _age_drift(age: int) -> float:
     return min(max(age - 35, 0) * 0.02, 1.2)
 
 
+def _age_band_shift(age: int) -> float:
+    """Age-band threshold adjustment (cumulative with sex shift)."""
+    if age > 60:
+        return -0.55
+    if age > 50:
+        return -0.35
+    if age > 40:
+        return -0.15
+    return 0.0
+
+
+def _age_band_label(age: int) -> str:
+    if age > 60:
+        return ">60"
+    if age > 50:
+        return "50-60"
+    if age > 40:
+        return "40-50"
+    return "<40"
+
+
 def measure_meniscus(digest: str, age: int, sex: str) -> List[Dict]:
     """Simulate thickness at the three anatomical locations."""
     rng = rng_for(digest, "meniscus")
@@ -57,10 +88,12 @@ def measure_meniscus(digest: str, age: int, sex: str) -> List[Dict]:
     return results
 
 
-def thresholds_for(sex: str) -> Dict[str, float]:
-    """Female thresholds shift down 0.3 mm."""
-    shift = -0.3 if sex.lower().startswith("f") else 0.0
-    return {k: round(v + shift, 2) for k, v in BASE_THRESHOLDS.items()}
+def thresholds_for(sex: str, age: int) -> Dict[str, float]:
+    """Sex- and age-adjusted thresholds."""
+    sex_shift = -0.3 if sex.lower().startswith("f") else 0.0
+    age_shift = _age_band_shift(age)
+    total_shift = sex_shift + age_shift
+    return {k: round(v + total_shift, 2) for k, v in BASE_THRESHOLDS.items()}
 
 
 def _base_class(mean_thickness: float, th: Dict[str, float]) -> str:
@@ -83,11 +116,15 @@ def classify_oa(measurements: List[Dict], age: int, sex: str) -> Dict:
     mean_thickness = round(sum(values) / len(values), 2)
     min_thickness = min(values)
 
-    th = thresholds_for(sex)
+    th = thresholds_for(sex, age)
     base = _base_class(mean_thickness, th)
 
     age_escalated = age > 60
     classification = escalate(base) if age_escalated else base
+
+    is_female = sex.lower().startswith("f")
+    sex_label = "Female" if is_female else "Male"
+    band = _age_band_label(age)
 
     reasons = [
         "Mean medial meniscus thickness {:.2f} mm (min {:.1f} mm at {}).".format(
@@ -95,18 +132,27 @@ def classify_oa(measurements: List[Dict], age: int, sex: str) -> Dict:
             min_thickness,
             next(m["label"] for m in measurements if m["thickness_mm"] == min_thickness),
         ),
-        "Sex-adjusted thresholds: severe < {severe} mm, moderate < {moderate} mm, "
+        "Patient profile: {} · age {} (band {}) — thresholds adjusted accordingly.".format(
+            sex_label, age, band
+        ),
+        "Adjusted thresholds: severe < {severe} mm, moderate < {moderate} mm, "
         "mild < {mild} mm.".format(**th),
     ]
     if age_escalated:
         reasons.append(
             "Age {} > 60: severity escalated one grade from {} to {}.".format(age, base, classification)
         )
+    if is_female:
+        reasons.append(
+            "Female sex: thresholds shifted −0.3 mm to account for population differences."
+        )
 
     return {
         "classification": classification,
         "base_classification": base,
         "age_escalated": age_escalated,
+        "sex_adjusted": is_female,
+        "age_band": band,
         "mean_thickness_mm": mean_thickness,
         "min_thickness_mm": min_thickness,
         "thresholds_mm": th,

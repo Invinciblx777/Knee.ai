@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listAnalyses } from '../lib/api'
-import { Card, Empty, ErrorNote, ModeBadge, SeverityBadge, Spinner, Stat } from '../components/ui'
+import { Card, Empty, ErrorNote, SeverityBadge, Spinner, Stat } from '../components/ui'
 import Icon from '../components/Icon'
 
 export default function Dashboard() {
@@ -53,7 +53,7 @@ export default function Dashboard() {
           title="Recent Analyses"
           icon="history"
           action={
-            <Link to="/history" className="inline-flex items-center gap-1 text-[12px] font-semibold text-accent">
+            <Link to="/history" className="inline-flex items-center gap-1 text-[12px] font-display font-semibold text-accent">
               View all <Icon name="chevron" size={13} />
             </Link>
           }
@@ -63,7 +63,6 @@ export default function Dashboard() {
               <thead>
                 <tr>
                   <th className="th">Patient</th>
-                  <th className="th">Mode</th>
                   <th className="th">Side</th>
                   <th className="th">Assessment</th>
                   <th className="th">KL</th>
@@ -77,28 +76,30 @@ export default function Dashboard() {
                   <tr key={r.analysis_id} className="row-hover">
                     <td className="td">
                       <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-lg bg-page ring-1 ring-line flex items-center
-                                         justify-center text-[11px] font-bold text-muted shrink-0">
+                        <span
+                          className="w-8 h-8 rounded-[8px] bg-accent text-white flex items-center
+                                     justify-center text-[11px] font-display font-bold shrink-0"
+                          style={{ border: '2px solid #2D2016' }}
+                        >
                           {r.patient.name.slice(0, 2).toUpperCase()}
                         </span>
                         <div>
-                          <div className="font-semibold text-navy">{r.patient.name}</div>
+                          <div className="font-display font-semibold text-navy">{r.patient.name}</div>
                           <div className="text-muted text-[11px]">
                             {r.patient.age} · {r.patient.sex} · {r.patient.imaging_type}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="td"><ModeBadge mode={r.mode} label={r.mode_label} size="sm" /></td>
-                    <td className="td">{r.patient.affected_side}</td>
+                    <td className="td font-display">{r.patient.affected_side}</td>
                     <td className="td"><SeverityBadge value={r.classification} /></td>
-                    <td className="td font-bold text-navy tnum">{r.kl_grade}</td>
-                    <td className="td">{r.primary_implant}</td>
-                    <td className="td font-semibold tnum">{r.confidence_pct}%</td>
+                    <td className="td font-display font-bold text-navy tnum">{r.kl_grade}</td>
+                    <td className="td font-display">{r.primary_implant}</td>
+                    <td className="td font-display font-semibold tnum">{r.confidence_pct}%</td>
                     <td className="td text-right">
                       <Link
                         to={`/results/${r.analysis_id}`}
-                        className="inline-flex items-center gap-1 text-accent font-semibold text-[13px]"
+                        className="inline-flex items-center gap-1 text-accent font-display font-semibold text-[13px]"
                       >
                         Open <Icon name="chevron" size={13} />
                       </Link>

@@ -32,7 +32,7 @@ export default function Settings() {
     <div className="space-y-6">
       <div>
         <h2 className="page-title">Settings</h2>
-        <p className="text-[13px] text-muted mt-1">
+        <p className="text-[13px] text-muted mt-1 font-display">
           Classification thresholds and the implant catalogue used for size matching.
         </p>
       </div>
@@ -50,45 +50,43 @@ export default function Settings() {
               {THRESHOLDS.map(([label, range, dot]) => (
                 <tr key={label} className="row-hover">
                   <td className="td">
-                    <span className="inline-flex items-center gap-2 font-medium">
-                      <span className={`w-2 h-2 rounded-full ${dot}`} />
+                    <span className="inline-flex items-center gap-2 font-display font-medium">
+                      <span className={`w-2.5 h-2.5 rounded-full ${dot}`} style={{ border: '1px solid #2D2016' }} />
                       {label}
                     </span>
                   </td>
-                  <td className="td">{range}</td>
+                  <td className="td font-display">{range}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <ul className="mt-4 space-y-1.5 text-[12px] text-muted leading-relaxed">
+          <ul className="mt-4 space-y-1.5 text-[12px] text-muted leading-relaxed font-display">
             <li>Female patients: every threshold shifts down by 0.3 mm.</li>
-            <li>Age &gt; 60: severity is escalated by one grade.</li>
-            <li>Results are seeded from the SHA-256 hash of the uploaded image, so a given image always yields identical output.</li>
+            <li>Age-band adjustments: 40-50 (−0.15 mm), 50-60 (−0.35 mm), &gt;60 (−0.55 mm + one grade escalation).</li>
+            <li>Results are seeded from the SHA-256 hash of the uploaded image for reproducibility.</li>
           </ul>
         </Card>
 
         <Card eyebrow="Legend" title="Overlay Colour Key" icon="layers" tone="blue">
           <div className="space-y-3">
             {[
-              ['Femur', '#3B82F6', 'Distal femur zone, drawn above the joint line.'],
-              ['Medial Meniscus', '#10B981', 'Joint-space zone with the three calliper measurements.'],
-              ['Tibia', '#EF4444', 'Proximal tibia zone with the ML width and slope indicator.'],
+              ['Femur', '#E8772E', 'Distal femur zone, drawn above the joint line.'],
+              ['Medial Meniscus', '#2D9F6F', 'Joint-space zone with the three calliper measurements.'],
+              ['Tibia', '#E85D75', 'Proximal tibia zone with the ML width and slope indicator.'],
             ].map(([label, color, desc]) => (
               <div key={label} className="flex items-start gap-3">
                 <span
-                  className="w-8 h-8 rounded-lg mt-0.5 shrink-0 ring-1"
-                  style={{ backgroundColor: `${color}1A`, borderColor: color, boxShadow: `inset 0 0 0 1px ${color}55` }}
-                >
-                  <span className="block w-full h-full rounded-lg" style={{ backgroundColor: `${color}22` }} />
-                </span>
+                  className="w-8 h-8 rounded-[8px] mt-0.5 shrink-0"
+                  style={{ backgroundColor: `${color}22`, border: `2px solid ${color}` }}
+                />
                 <div>
-                  <div className="text-[13px] font-medium text-navy">{label}</div>
-                  <div className="text-[12px] text-muted">{desc}</div>
+                  <div className="text-[13px] font-display font-medium text-navy">{label}</div>
+                  <div className="text-[12px] text-muted font-display">{desc}</div>
                 </div>
               </div>
             ))}
           </div>
-          <p className="mt-5 text-[12px] text-muted leading-relaxed">
+          <p className="mt-5 text-[12px] text-muted leading-relaxed font-display">
             Matching method: {db.systems.length} implant systems × 5 sizes, ranked by euclidean
             distance across femoral ML/AP and tibial ML/AP.
           </p>
@@ -110,7 +108,7 @@ export default function Settings() {
           </select>
         }
       >
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] mb-4">
+        <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] mb-4 font-display">
           <div><span className="text-muted">Type: </span><span className="font-medium">{active.type}</span></div>
           <div><span className="text-muted">Built-in slope: </span><span className="font-medium">{active.built_in_slope}°</span></div>
           <div><span className="text-muted">Sizes: </span><span className="font-medium">{active.sizes.length}</span></div>
@@ -130,19 +128,22 @@ export default function Settings() {
               {active.sizes.map((s) => (
                 <tr key={s.size} className="row-hover">
                   <td className="td">
-                    <span className="inline-flex items-center justify-center min-w-[34px] h-7 px-2 rounded-lg
-                                     bg-page ring-1 ring-line text-[12px] font-bold text-navy">{s.size}</span>
+                    <span
+                      className="inline-flex items-center justify-center min-w-[34px] h-7 px-2 rounded-[8px]
+                                 bg-page text-[12px] font-display font-bold text-navy"
+                      style={{ border: '2px solid #2D2016' }}
+                    >{s.size}</span>
                   </td>
-                  <td className="td">{s.femoral_ml} mm</td>
-                  <td className="td">{s.femoral_ap} mm</td>
-                  <td className="td">{s.tibial_ml} mm</td>
-                  <td className="td">{s.tibial_ap} mm</td>
+                  <td className="td font-display">{s.femoral_ml} mm</td>
+                  <td className="td font-display">{s.femoral_ap} mm</td>
+                  <td className="td font-display">{s.tibial_ml} mm</td>
+                  <td className="td font-display">{s.tibial_ap} mm</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="mt-4 text-[11px] text-muted">{db.meta.note}</p>
+        <p className="mt-4 text-[11px] text-muted font-display">{db.meta.note}</p>
       </Card>
     </div>
   )

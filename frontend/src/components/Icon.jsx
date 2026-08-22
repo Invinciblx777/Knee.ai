@@ -139,17 +139,21 @@ export default function Icon({ name, size = 16, className = '', strokeWidth = 1.
 /** Tinted square that holds an icon — used on card headers and metric tiles. */
 export function IconChip({ name, tone = 'slate', size = 'md', className = '' }) {
   const tones = {
-    slate: 'bg-page text-muted ring-line',
-    blue: 'bg-accent-light text-accent ring-accent/15',
-    green: 'bg-ok-light text-ok ring-ok/15',
-    amber: 'bg-warn-light text-warn ring-warn/20',
-    red: 'bg-danger-light text-danger ring-danger/15',
-    navy: 'bg-navy text-white ring-navy/10',
+    slate: 'bg-page text-muted',
+    blue: 'bg-accent-light text-accent',
+    green: 'bg-ok-light text-ok',
+    amber: 'bg-warn-light text-warn',
+    red: 'bg-danger-light text-danger',
+    navy: 'bg-navy text-white',
   }
-  const dims = size === 'sm' ? 'w-7 h-7 rounded-lg' : 'w-9 h-9 rounded-[10px]'
+  const dims = size === 'sm' ? 'w-7 h-7 rounded-[8px]' : 'w-9 h-9 rounded-[10px]'
   return (
-    <span className={`inline-flex items-center justify-center ring-1 ${dims} ${tones[tone]} ${className}`}>
+    <span
+      className={`inline-flex items-center justify-center ${dims} ${tones[tone]} ${className}`}
+      style={{ border: '2px solid #2D2016' }}
+    >
       <Icon name={name} size={size === 'sm' ? 14 : 17} />
     </span>
   )
 }
+

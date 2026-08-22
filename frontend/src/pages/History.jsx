@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { deleteAnalysis, imageUrl, listAnalyses, reportUrl } from '../lib/api'
-import { Card, Empty, ErrorNote, ModeBadge, SeverityBadge, Spinner } from '../components/ui'
+import { Card, Empty, ErrorNote, SeverityBadge, Spinner } from '../components/ui'
 import Icon from '../components/Icon'
 
 const FILTERS = ['All', 'Normal', 'Mild OA', 'Moderate OA', 'Severe OA']
@@ -39,7 +39,7 @@ export default function History() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="page-title">History</h2>
-          <p className="text-[13px] text-muted mt-1">{items.length} stored analyses.</p>
+          <p className="text-[13px] text-muted mt-1 font-display">{items.length} stored analyses.</p>
         </div>
         <Link to="/new" className="btn-primary"><Icon name="scan" size={15} />New Analysis</Link>
       </div>
@@ -77,11 +77,12 @@ export default function History() {
                     key={f}
                     onClick={() => setFilter(f)}
                     className={[
-                      'h-8 px-2.5 rounded-lg border text-[12px] font-semibold transition-all duration-150',
+                      'h-8 px-2.5 rounded-[8px] text-[12px] font-display font-semibold transition-all duration-150',
                       filter === f
-                        ? 'border-accent/30 text-accent bg-accent-light'
-                        : 'border-line text-muted hover:bg-page hover:border-line-strong',
+                        ? 'text-accent bg-accent-light'
+                        : 'text-muted hover:bg-page',
                     ].join(' ')}
+                    style={{ border: filter === f ? '2px solid #2D2016' : '2px solid transparent' }}
                   >
                     {f}
                   </button>
@@ -97,7 +98,6 @@ export default function History() {
                   <th className="th">Scan</th>
                   <th className="th">Patient</th>
                   <th className="th">Date</th>
-                  <th className="th">Mode</th>
                   <th className="th">Assessment</th>
                   <th className="th">KL</th>
                   <th className="th">Mean thickness</th>
@@ -112,21 +112,21 @@ export default function History() {
                       <img
                         src={imageUrl(r.thumbnail)}
                         alt=""
-                        className="w-11 h-11 object-cover rounded-lg ring-1 ring-line bg-stage"
+                        className="w-11 h-11 object-cover rounded-[8px] bg-stage"
+                        style={{ border: '2px solid #2D2016' }}
                       />
                     </td>
                     <td className="td">
-                      <div className="font-semibold text-navy">{r.patient.name}</div>
+                      <div className="font-display font-semibold text-navy">{r.patient.name}</div>
                       <div className="text-muted text-[11px]">
                         {r.patient.age} · {r.patient.sex} · {r.patient.affected_side}
                       </div>
                     </td>
-                    <td className="td text-muted">{r.created_at.replace('T', ' ')}</td>
-                    <td className="td"><ModeBadge mode={r.mode} label={r.mode_label} size="sm" /></td>
+                    <td className="td text-muted font-display">{r.created_at.replace('T', ' ')}</td>
                     <td className="td"><SeverityBadge value={r.classification} /></td>
-                    <td className="td font-bold text-navy tnum">{r.kl_grade}</td>
-                    <td className="td tnum">{r.mean_thickness_mm.toFixed(2)} mm</td>
-                    <td className="td">
+                    <td className="td font-display font-bold text-navy tnum">{r.kl_grade}</td>
+                    <td className="td tnum font-display">{r.mean_thickness_mm.toFixed(2)} mm</td>
+                    <td className="td font-display">
                       {r.primary_implant}
                       <span className="text-muted"> · {r.confidence_pct}%</span>
                     </td>
@@ -134,21 +134,21 @@ export default function History() {
                       <div className="inline-flex items-center gap-1">
                         <Link
                           to={`/results/${r.analysis_id}`}
-                          className="inline-flex items-center gap-1 h-7 px-2 rounded-lg text-accent
-                                     font-semibold text-[12px] transition-colors duration-150 hover:bg-accent-light"
+                          className="inline-flex items-center gap-1 h-7 px-2 rounded-[8px] text-accent
+                                     font-display font-semibold text-[12px] transition-colors duration-150 hover:bg-accent-light"
                         >
                           Open
                         </Link>
                         <a
                           href={reportUrl(r.analysis_id)} target="_blank" rel="noreferrer"
-                          className="inline-flex items-center gap-1 h-7 px-2 rounded-lg text-muted
-                                     font-semibold text-[12px] transition-colors duration-150 hover:bg-page hover:text-navy"
+                          className="inline-flex items-center gap-1 h-7 px-2 rounded-[8px] text-muted
+                                     font-display font-semibold text-[12px] transition-colors duration-150 hover:bg-page hover:text-navy"
                         >
                           <Icon name="download" size={13} /> PDF
                         </a>
                         <button
                           onClick={() => remove(r.analysis_id)}
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-ink-300
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] text-ink-300
                                      transition-colors duration-150 hover:bg-danger-light hover:text-danger"
                           aria-label="Delete analysis"
                         >
@@ -160,7 +160,7 @@ export default function History() {
                 ))}
                 {visible.length === 0 && (
                   <tr>
-                    <td className="td text-muted" colSpan={9}>No analyses match the current filter.</td>
+                    <td className="td text-muted font-display" colSpan={8}>No analyses match the current filter.</td>
                   </tr>
                 )}
               </tbody>

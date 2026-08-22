@@ -24,29 +24,36 @@ export default function Topbar({ onMenu }) {
 
   return (
     <header
-      className="h-[68px] border-b border-line flex items-center justify-between
+      className="h-[68px] flex items-center justify-between
                  px-5 sm:px-6 lg:px-8 bg-surface/85 backdrop-blur-md sticky top-0 z-20"
+      style={{ borderBottom: '2px solid #2D2016' }}
     >
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onMenu}
-          className="lg:hidden w-9 h-9 -ml-1 rounded-[10px] border border-line flex items-center
+          className="lg:hidden w-9 h-9 -ml-1 rounded-[10px] flex items-center
                      justify-center transition-colors duration-150 hover:bg-page"
+          style={{ border: '2px solid #2D2016' }}
           aria-label="Open navigation"
         >
-          <span className="block w-4 h-[1.5px] bg-navy relative before:absolute before:-top-[5px] before:left-0 before:w-4 before:h-[1.5px] before:bg-navy after:absolute after:top-[5px] after:left-0 after:w-4 after:h-[1.5px] after:bg-navy" />
+          <span className="block w-4 h-[2px] bg-navy relative before:absolute before:-top-[5px] before:left-0 before:w-4 before:h-[2px] before:bg-navy after:absolute after:top-[5px] after:left-0 after:w-4 after:h-[2px] after:bg-navy" />
         </button>
 
         <nav className="flex items-center gap-2 min-w-0" aria-label="Breadcrumb">
-          <span className="text-[13px] font-semibold text-navy whitespace-nowrap">KneeAI</span>
+          <span className="text-[14px] font-serif font-semibold text-navy whitespace-nowrap">
+            Knee<span className="text-accent">.AI</span>
+          </span>
           <Icon name="chevron" size={13} className="text-ink-300 shrink-0" />
-          <span className="text-[13px] text-muted truncate">{crumb}</span>
+          <span className="text-[13px] font-display text-muted truncate">{crumb}</span>
         </nav>
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="hidden sm:inline-flex items-center gap-2 h-8 px-3 rounded-full
-                         border border-line bg-surface text-[12px] font-medium text-muted">
+        <span
+          className="hidden sm:inline-flex items-center gap-2 h-8 px-3 rounded-full
+                     bg-surface text-[12px] font-display font-medium text-muted"
+          style={{ border: '2px solid #2D2016' }}
+        >
           <span className="relative flex w-2 h-2">
             {online && (
               <span className="absolute inline-flex w-2 h-2 rounded-full bg-ok animate-pulse-dot" />

@@ -16,26 +16,20 @@ function Item({ to, label, icon, end, onClick }) {
       onClick={onClick}
       className={({ isActive }) =>
         [
-          'group relative flex items-center gap-3 pl-3 pr-3 h-10 rounded-[10px]',
-          'text-[13px] font-medium transition-all duration-150',
+          'group relative flex items-center gap-3 pl-3 pr-3 h-11 rounded-[10px]',
+          'text-[14px] font-display font-medium transition-all duration-150',
           isActive
-            ? 'bg-white/[0.07] text-white'
-            : 'text-ink-400 hover:text-white hover:bg-white/[0.04]',
+            ? 'bg-accent text-white shadow-[2px_2px_0_#1A130D]'
+            : 'text-ink-400 hover:text-white hover:bg-white/[0.06]',
         ].join(' ')
       }
     >
       {({ isActive }) => (
         <>
-          <span
-            className={[
-              'absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full transition-all duration-200',
-              isActive ? 'h-5 bg-accent' : 'h-0 bg-transparent',
-            ].join(' ')}
-          />
           <Icon
             name={icon}
-            size={17}
-            className={isActive ? 'text-accent' : 'text-ink-600 group-hover:text-ink-400'}
+            size={18}
+            className={isActive ? 'text-white' : 'text-ink-600 group-hover:text-ink-400'}
           />
           {label}
         </>
@@ -62,23 +56,23 @@ export default function Sidebar({ open, onClose }) {
           'lg:translate-x-0',
         ].join(' ')}
       >
-        <div className="h-[68px] flex items-center gap-3 px-5 border-b border-white/[0.06]">
-          <div className="w-9 h-9 rounded-[10px] bg-accent flex items-center justify-center
-                          text-white text-[12px] font-bold shrink-0
-                          shadow-[0_0_0_1px_rgba(59,130,246,0.35),0_6px_16px_-6px_rgba(59,130,246,0.8)]">
-            KA
-          </div>
+        {/* Brand — clean serif, no logo box */}
+        <div className="h-[68px] flex items-center px-5 border-b border-white/[0.08]">
           <div className="leading-tight">
-            <div className="text-white text-[14px] font-bold tracking-[-0.01em]">Knee Analysis</div>
-            <div className="text-ink-600 text-[11px]">Clinical Decision Support</div>
+            <div className="text-white text-[20px] font-serif font-semibold tracking-[-0.02em]">
+              Knee<span className="text-accent">.AI</span>
+            </div>
+            <div className="text-ink-600 text-[10px] font-display tracking-widest uppercase">
+              Analysis Platform
+            </div>
           </div>
         </div>
 
         <nav className="px-3 pt-5 pb-3 flex-1">
-          <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.13em] text-ink-700">
-            Workspace
+          <p className="px-3 pb-2 text-[10px] font-display font-bold uppercase tracking-[0.15em] text-ink-700">
+            Menu
           </p>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {NAV.map((n) => (
               <Item key={n.to} {...n} onClick={onClose} />
             ))}
@@ -86,10 +80,10 @@ export default function Sidebar({ open, onClose }) {
         </nav>
 
         <div className="p-3">
-          <div className="rounded-[10px] bg-white/[0.04] ring-1 ring-white/[0.05] p-3.5">
+          <div className="rounded-[10px] bg-white/[0.04] ring-1 ring-white/[0.06] p-3.5">
             <div className="flex items-center gap-2 text-ink-300">
               <Icon name="shield" size={14} className="text-ok" />
-              <span className="text-[11px] font-semibold">Research use</span>
+              <span className="text-[11px] font-display font-semibold">Clinical Tool</span>
             </div>
             <p className="mt-1.5 text-[10px] leading-relaxed text-ink-600">
               Decision support only. Final diagnosis remains with the clinician.

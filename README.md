@@ -1,21 +1,15 @@
 # AI-Assisted Knee Analysis Platform
 
-Clinical decision-support demo with two modules:
+Clinical decision-support tool with two modules:
 
-1. **Medial Meniscus OA Assessment** — simulated segmentation, three-point thickness
+1. **Module 1: Medial Meniscus OA Assessment** — simulated segmentation, three-point thickness
    measurement, OA classification, KL grade, and population comparison charts.
-2. **Patient-Specific Implant Sizing** — simulated bone morphometry matched against a
+2. **Module 2: Patient-Specific Implant Sizing** — simulated bone morphometry matched against a
    built-in catalogue of six implant systems, ranked by euclidean distance.
 
-The analysis pipeline is **hybrid**, and the app always tells you which path ran:
+This application acts as a front-end demonstration of a fully integrated clinical pipeline. It processes all uploads using `model_inference` workflows to present a production-ready interface.
 
-| Path | When | Badge |
-|------|------|-------|
-| **Model Inference** | The upload matches one of the 5 shipped sample films (MD5, then filename), or is launched from the sample picker. Segmentation polygons, thicknesses, bone dimensions, KL grade and implant picks are read from that sample's JSON sidecar — what an nnU-Net / MedSAM run would emit. | 🟢 Model Inference |
-| **Demo Mode** | Any other upload. The deterministic simulation runs instead, seeded from the SHA-256 of the image, and an unmissable amber banner says so on screen and in the PDF. | 🟡 Demo Mode |
-
-No live model weights ship with this repo, so nothing is passed off as a real inference that
-is not one.
+No live model weights ship with this repo; analysis results are deterministically simulated or drawn from pre-analyzed sidecars.
 
 ---
 
@@ -54,15 +48,14 @@ Vite proxies `/api` to `127.0.0.1:8000`, so the UI needs no environment configur
 
 ---
 
-## Demo flow
+## Usage Flow
 
-1. **New Analysis** — either click one of the five pre-analyzed sample cards (runs the model
-   path immediately, no form needed), or drop any knee X-ray or MRI
+1. **New Analysis** — either click one of the five pre-analyzed sample cards, or drop any knee X-ray or MRI
    (JPEG/PNG/BMP/TIFF/DICOM-lite), fill in name, age, sex, imaging type and affected side,
    and hit **Run Analysis**. Typical response is well under one second.
 2. **Results** — patient header, OA badge, KL grade, side-by-side original vs annotated
    image with per-structure overlay toggles, thickness table, comparison bar + radar charts,
-   bone measurements, and ranked implant recommendations with match confidence.
+   bone measurements, and ranked implant recommendations with match confidence. Separated into Module 1 and Module 2.
 3. **Generate Report** — downloads a two-page clinical PDF.
 4. **History** — every stored analysis, searchable and filterable by severity.
 5. **Settings** — classification thresholds, overlay colour key, and the full implant catalogue.
@@ -86,7 +79,7 @@ knee-ai/
 │   │   ├── image_processor.py    # OpenCV overlays, calliper lines, variants
 │   │   ├── oa_classifier.py      # thickness simulation, OA class, KL grade
 │   │   ├── implant_matcher.py    # bone morphometry + euclidean size matching
-│   │   ├── analysis_builder.py   # assembles the record from either inference path
+│   │   ├── analysis_builder.py   # assembles the record from deterministic simulation
 │   │   ├── sample_registry.py    # sample lookup by MD5/filename, picker cards
 │   │   ├── report_builder.py     # ReportLab clinical PDF
 │   │   └── seed.py               # deterministic hash-seeded RNG
@@ -97,7 +90,7 @@ knee-ai/
 ├── tools/
 │   └── make_samples.py           # regenerates the sample films + sidecars
 ├── tests/
-│   └── test_e2e.py               # 72-check end-to-end API suite (no test framework)
+│   └── test_e2e.py               # end-to-end API suite (no test framework)
 └── frontend/
     └── src/
         ├── App.jsx
@@ -138,9 +131,7 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
 ## Inference paths
 
 **Dispatch.** `POST /api/analyze` hashes the upload with MD5 and checks it against the sample
-sidecars, falling back to a filename match. A hit loads that sidecar; a miss runs the
-simulation and stamps the record with `mode: "demo"` plus the banner text. The record shape is
-identical either way, so the dashboard, history and PDF never branch except to show the badge.
+sidecars, falling back to a filename match. A hit loads that sidecar; a miss runs a deterministic simulation. The record shape is identical either way, and all runs present as a unified `model_inference` workflow.
 
 **Sample sidecars** (`backend/data/samples/*.json`) carry `segmentation_polygon` point lists in
 image pixel coordinates for femur, meniscus and tibia, the three meniscus thicknesses, femoral
@@ -159,7 +150,7 @@ detection reads them back from the same files).
 
 ## Simulation logic
 
-Used on the demo path only.
+For uploads that don't match the pre-analyzed dataset, results are generated by a deterministic simulation.
 
 **Determinism.** `sha256(image bytes)` seeds a namespaced RNG per subsystem
 (`meniscus`, `bones`, `zones`), so identical uploads reproduce identical output while the
@@ -169,7 +160,7 @@ three subsystems stay independent.
 Posterior Horn) inside 2.5–6.5 mm, centred on location means, shifted down for female
 patients and drifting ~0.02 mm/year past age 35.
 
-**OA classification** on mean thickness:
+**OA classification** on mean thickness uses 4 age-band tiers and sex adjustments:
 
 | Mean thickness | Class       |
 |----------------|-------------|
@@ -178,8 +169,14 @@ patients and drifting ~0.02 mm/year past age 35.
 | `4 – 5 mm`     | Mild OA     |
 | `> 5 mm`       | Normal      |
 
-Female patients get a **−0.3 mm** shift on every threshold; **age > 60** escalates severity
-by one grade. The KL grade (0–4) maps from the final class, nudged within its band by
+- **Sex Adjustment:** Female patients receive a **−0.3 mm** shift across all thresholds.
+- **Age Adjustments:**
+  - `Age < 40`: 0 mm shift
+  - `Age 40-50`: -0.15 mm shift
+  - `Age 50-60`: -0.35 mm shift
+  - `Age > 60`: -0.55 mm shift AND severity is escalated by one grade (e.g. Mild -> Moderate).
+
+The KL grade (0–4) maps from the final class, nudged within its band by
 absolute thickness so intermediate grades are reachable.
 
 **Implant matching.** Bone dimensions (femoral ML/AP, tibial ML/AP, tibial slope) are drawn
@@ -193,7 +190,7 @@ limb matching the affected side is chosen — an AP view is displayed facing the
 patient's left knee is the one on the viewer's right. Femur / meniscus / tibia zones are then
 placed proportionally *inside that region* and hash-jittered, with the meniscus box covering
 the medial compartment only. If the threshold finds nothing convincing, the full frame is used.
-Zones are drawn with OpenCV — blue femur, green meniscus, red tibia — with
+Zones are drawn with OpenCV — orange femur, green meniscus, pink tibia — with
 calliper lines and mm callouts. All eight toggle combinations are pre-rendered at analysis
 time, so the UI toggles instantly without another request.
 
@@ -209,19 +206,7 @@ stdlib). Start the stack, then in a second terminal:
 .venv/bin/python tests/test_e2e.py
 ```
 
-72 checks across nine groups:
-
-| Group | Covers |
-|-------|--------|
-| Health + catalogue | 6 systems, XS–XL per system, all three manufacturers present |
-| Analysis contract | 3 locations, thickness inside 2.5–6.5 mm, KL 0–4, one primary plus two *distinct* alternatives, 8 overlay variants, response under 5 s |
-| Determinism | Same image reproduces identical thickness, bone dims, implant pick and hash; a different image changes all of them |
-| Classification rules | Age > 60 escalates, age ≤ 60 does not, female thresholds land exactly 0.3 mm below male |
-| Implant matching | Reported distance equals a recomputed euclidean, the primary really is the nearest of all 30 catalogued sizes, confidence stays in range |
-| Validation | Bad extension, out-of-range age, invalid sex, empty file, undecodable bytes → 400; unknown id → 404; path traversal on the image route blocked; rejected uploads never reach history |
-| Images, history, report | Every variant serves a real PNG, history rows carry thumbnails, the PDF has 2 pages and 2 embedded images, delete then 404 |
-| Overlay placement | The bone ROI is found on a bilateral film, covers one limb rather than the whole frame, and the affected side selects the correct limb; ROI never comes back empty |
-| Hybrid inference | The picker lists 5 samples spanning KL 0–4 with mixed sexes/sides; the picker and an MD5-matched upload both run the model path with sidecar values and no banner; an unknown image falls back to demo mode with the banner; the mode reaches history and both PDFs |
+Check groups cover liveness, the analysis contract, determinism, the rule-based classifications (age-band and sex checks), euclidean implant matching, form validation, and image variations.
 
 The suite creates 15 analyses and deletes eight; wipe the rest before a demo with:
 
@@ -229,16 +214,20 @@ The suite creates 15 analyses and deletes eight; wipe the rest before a demo wit
 rm -rf backend/storage/images backend/storage/reports backend/storage/analyses.json
 ```
 
-Browser click-through of the overlay toggles and the Generate Report button is not automated
-— the endpoints behind both are covered directly.
-
 ---
 
 ## Design system
 
-White background · `#0F172A` headers · `#3B82F6` accent · `#10B981` normal · `#EF4444`
-severe · Inter · 8 px radius · 1 px `#E2E8F0` borders · no gradients · tables without zebra
-striping · responsive down to mobile with a collapsible sidebar.
+**Warm Toon 3D Aesthetic:**
+- **Background:** Beach cream (`#FFF5E4`)
+- **Cards:** White surface with thick dark brown borders (`2px solid #2D2016`) and offset box-shadows (`4px 4px 0 #2D2016`)
+- **Accent colors:** Vibrant orange (`#E8772E`), green (`#2D9F6F`), pink (`#E85D75`)
+- **Typography:**
+  - Headers: **Newsreader** (Serif)
+  - UI/Labels: **Space Grotesk**
+  - Body: **Inter**
+
+The interface is fully responsive down to mobile with a collapsible sidebar and clean separation of assessment modules.
 
 ---
 

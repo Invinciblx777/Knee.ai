@@ -450,6 +450,7 @@ export default function Results() {
               </div>
             </Tile>
           </div>
+        </div>
 
         <Card eyebrow="Implant Catalogue" title="Implant Size Matching" icon="implant" tone="blue">
           <ImplantTable implant={result.implant} />

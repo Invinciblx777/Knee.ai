@@ -119,6 +119,12 @@ const PATHS = {
       <path d="M16 17l5-5-5-5M21 12H9" />
     </>
   ),
+  leaf: (
+    <>
+      <path d="M11 20A7 7 0 0 1 4 13c0-6 7-11 15-11 0 8-5 15-11 15-1 0-2-.2-3-.6" />
+      <path d="M4 21c3-3 6-6 15-15" />
+    </>
+  ),
 }
 
 export default function Icon({ name, size = 16, className = '', strokeWidth = 1.6 }) {

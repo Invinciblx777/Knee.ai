@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { getAnalysis, downloadReport } from '../lib/api'
+import { getAnalysis, downloadReport, getFoodAdvice } from '../lib/api'
 import {
   Card, CompareBar, Disclaimer, ErrorNote, Gauge, SeverityBadge, Spinner, Tile,
 } from '../components/ui'
@@ -10,7 +10,7 @@ import { ConfidenceBars, ThicknessComparison, ThicknessRadar } from '../componen
 
 const KL_COLOR = ['#2D9F6F', '#E8772E', '#D4A017', '#E85D75', '#E85D75']
 
-function PatientHeader({ result }) {
+function PatientHeader({ result, onGetAdvice, gettingAdvice }) {
   const p = result.patient
   const fields = [
     ['Age', p.age],
@@ -58,10 +58,16 @@ function PatientHeader({ result }) {
           </div>
         </div>
 
-        <button className="btn-dark" onClick={handleDownload} disabled={downloading}>
-          <Icon name="download" size={15} />
-          {downloading ? 'Generating...' : 'Generate Report'}
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button className="btn-ghost" onClick={onGetAdvice} disabled={gettingAdvice}>
+            <Icon name="leaf" size={15} />
+            {gettingAdvice ? 'Thinking...' : 'Get AI Food Diet'}
+          </button>
+          <button className="btn-dark" onClick={handleDownload} disabled={downloading}>
+            <Icon name="download" size={15} />
+            {downloading ? 'Generating...' : 'Generate Report'}
+          </button>
+        </div>
       </div>
 
       <div
@@ -215,6 +221,22 @@ export default function Results() {
   const { state } = useLocation()
   const [result, setResult] = useState(state?.result ?? null)
   const [error, setError] = useState('')
+  const [foodAdvice, setFoodAdvice] = useState('')
+  const [adviceError, setAdviceError] = useState('')
+  const [gettingAdvice, setGettingAdvice] = useState(false)
+
+  const handleGetAdvice = async () => {
+    setGettingAdvice(true)
+    setAdviceError('')
+    try {
+      const { advice } = await getFoodAdvice(result)
+      setFoodAdvice(advice)
+    } catch (e) {
+      setAdviceError(e.message)
+    } finally {
+      setGettingAdvice(false)
+    }
+  }
 
   useEffect(() => {
     if (result && result.analysis_id === id) return
@@ -239,7 +261,17 @@ export default function Results() {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <PatientHeader result={result} />
+      <PatientHeader result={result} onGetAdvice={handleGetAdvice} gettingAdvice={gettingAdvice} />
+
+      {(foodAdvice || adviceError) && (
+        <Card eyebrow="AI Generated" title="Food & Diet Advice" icon="leaf" tone="green">
+          {adviceError ? (
+            <ErrorNote>{adviceError}</ErrorNote>
+          ) : (
+            <p className="text-[13px] text-navy font-display leading-relaxed whitespace-pre-wrap">{foodAdvice}</p>
+          )}
+        </Card>
+      )}
 
       {/* ═══════════════════════════════════════════════════════
           MODULE 1 — OA Assessment

@@ -86,6 +86,13 @@ export const updateAdvice = async (id, adviceText) => {
   return { success: true }
 }
 
+export const getFoodAdvice = (record) =>
+  fetchWithAuth(`${BASE}/advice`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ record }),
+  }).then(handle)
+
 export const getImplants = () => fetchWithAuth(`${BASE}/implants`).then(handle)
 export const health = () => fetchWithAuth(`${BASE}/health`).then(handle)
 

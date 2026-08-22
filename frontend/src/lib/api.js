@@ -45,7 +45,35 @@ export const imageUrl = (filenameOrDataUrl) => {
   if (filenameOrDataUrl.startsWith('data:')) return filenameOrDataUrl
   return `${BASE}/images/${filenameOrDataUrl}`
 }
-export const reportUrl = (id) => `${BASE}/report/${id}`
+export async function downloadReport(result) {
+  const res = await fetch(`${BASE}/report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ record: result }),
+  })
+  if (!res.ok) {
+    let detail = 'Failed to generate report'
+    try {
+      const body = await res.json()
+      if (body.detail) detail = body.detail
+    } catch (_) { /* ignore */ }
+    throw new Error(detail)
+  }
+  
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  
+  const contentDisp = res.headers.get('Content-Disposition') || ''
+  const match = contentDisp.match(/filename="?([^"]+)"?/)
+  a.download = match ? match[1] : `Knee_Report_${result.analysis_id || 'Unknown'}.pdf`
+  
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 // Rewrite backend-returned relative sample image paths to the correct absolute URL.
 // The backend returns "/api/samples/{source}/image" but in production the frontend
 // is on a different domain than the backend, so we must prefix with BASE's origin.

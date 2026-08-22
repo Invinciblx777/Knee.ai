@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { deleteAnalysis, imageUrl, listAnalyses, reportUrl } from '../lib/api'
+import { deleteAnalysis, imageUrl, listAnalyses, getAnalysis, downloadReport } from '../lib/api'
 import { Card, Empty, ErrorNote, SeverityBadge, Spinner } from '../components/ui'
 import Icon from '../components/Icon'
 
@@ -11,6 +11,7 @@ export default function History() {
   const [error, setError] = useState('')
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')
+  const [downloadingId, setDownloadingId] = useState(null)
 
   const load = () => listAnalyses().then((d) => setItems(d.items)).catch((e) => setError(e.message))
   useEffect(() => { load() }, [])
@@ -22,6 +23,19 @@ export default function History() {
       setItems((list) => list.filter((i) => i.analysis_id !== id))
     } catch (e) {
       setError(e.message)
+    }
+  }
+
+  async function handleDownload(id) {
+    setDownloadingId(id)
+    setError('')
+    try {
+      const fullResult = await getAnalysis(id)
+      await downloadReport(fullResult)
+    } catch (e) {
+      setError('Failed to download report: ' + e.message)
+    } finally {
+      setDownloadingId(null)
     }
   }
 
@@ -139,13 +153,14 @@ export default function History() {
                         >
                           Open
                         </Link>
-                        <a
-                          href={reportUrl(r.analysis_id)} target="_blank" rel="noreferrer"
+                        <button
+                          onClick={() => handleDownload(r.analysis_id)}
+                          disabled={downloadingId === r.analysis_id}
                           className="inline-flex items-center gap-1 h-7 px-2 rounded-[8px] text-muted
-                                     font-display font-semibold text-[12px] transition-colors duration-150 hover:bg-page hover:text-navy"
+                                     font-display font-semibold text-[12px] transition-colors duration-150 hover:bg-page hover:text-navy disabled:opacity-50"
                         >
-                          <Icon name="download" size={13} /> PDF
-                        </a>
+                          <Icon name="download" size={13} /> {downloadingId === r.analysis_id ? 'Wait...' : 'PDF'}
+                        </button>
                         <button
                           onClick={() => remove(r.analysis_id)}
                           className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] text-ink-300

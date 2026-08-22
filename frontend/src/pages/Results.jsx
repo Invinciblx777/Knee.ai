@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { getAnalysis, reportUrl } from '../lib/api'
+import { getAnalysis, downloadReport } from '../lib/api'
 import {
   Card, CompareBar, Disclaimer, ErrorNote, Gauge, SeverityBadge, Spinner, Tile,
 } from '../components/ui'
@@ -19,6 +19,19 @@ function PatientHeader({ result }) {
     ['Side', `${p.affected_side} knee`],
     ['Analysed', result.created_at.replace('T', ' ')],
   ]
+
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      await downloadReport(result)
+    } catch (e) {
+      alert('Failed to download report: ' + e.message)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <div className="card overflow-hidden">
@@ -45,10 +58,10 @@ function PatientHeader({ result }) {
           </div>
         </div>
 
-        <a className="btn-dark" href={reportUrl(result.analysis_id)} target="_blank" rel="noreferrer">
+        <button className="btn-dark" onClick={handleDownload} disabled={downloading}>
           <Icon name="download" size={15} />
-          Generate Report
-        </a>
+          {downloading ? 'Generating...' : 'Generate Report'}
+        </button>
       </div>
 
       <div

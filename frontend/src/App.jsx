@@ -6,6 +6,7 @@ import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
 import NewAnalysis from './pages/NewAnalysis'
 import History from './pages/History'
+import Research from './pages/Research'
 import Settings from './pages/Settings'
 import Results from './pages/Results'
 import Auth from './pages/Auth'
@@ -52,6 +53,7 @@ export default function App() {
               <Route path="/new" element={<NewAnalysis />} />
               <Route path="/results/:id" element={<Results />} />
               <Route path="/history" element={<History />} />
+              <Route path="/research" element={<Research />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

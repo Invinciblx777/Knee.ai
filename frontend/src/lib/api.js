@@ -93,6 +93,24 @@ export const getFoodAdvice = (record) =>
     body: JSON.stringify({ record }),
   }).then(handle)
 
+/** Batch-analyse studies and return cohort statistics. */
+export function analyseCohort(files, meta = {}, includeFlagged = false) {
+  const form = new FormData()
+  files.forEach((f) => form.append('files', f))
+  if (meta.ages) form.append('ages', meta.ages.join(','))
+  if (meta.sexes) form.append('sexes', meta.sexes.join(','))
+  if (meta.sides) form.append('sides', meta.sides.join(','))
+  form.append('include_flagged', String(includeFlagged))
+  return fetchWithAuth(`${BASE}/research/cohort`, { method: 'POST', body: form }).then(handle)
+}
+
+/** Cohort over the bundled reference samples — no upload needed. */
+export function analyseSampleCohort(includeFlagged = false) {
+  const form = new FormData()
+  form.append('include_flagged', String(includeFlagged))
+  return fetchWithAuth(`${BASE}/research/cohort/samples`, { method: 'POST', body: form }).then(handle)
+}
+
 export const getImplants = () => fetchWithAuth(`${BASE}/implants`).then(handle)
 export const health = () => fetchWithAuth(`${BASE}/health`).then(handle)
 

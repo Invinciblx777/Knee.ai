@@ -7,6 +7,7 @@ const CRUMBS = {
   '/': 'Dashboard',
   '/new': 'New Analysis',
   '/history': 'History',
+  '/research': 'Research Mode',
   '/settings': 'Settings',
 }
 

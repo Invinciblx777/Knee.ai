@@ -1,6 +1,7 @@
 import {
-  Bar, BarChart, CartesianGrid, Legend, PolarAngleAxis, PolarGrid,
-  PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Bar, BarChart, CartesianGrid, Cell, Legend, PolarAngleAxis, PolarGrid,
+  PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Scatter, ScatterChart,
+  Tooltip, XAxis, YAxis,
 } from 'recharts'
 
 const AXIS = { fontSize: 11, fill: '#8B7D6B', fontFamily: 'Space Grotesk, sans-serif' }
@@ -104,6 +105,121 @@ export function ConfidenceBars({ candidates }) {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+// ── Research mode: cohort-level charts ───────────────────────────────────────
+
+const SEVERITY_FILL = {
+  'Normal': '#2D9F6F', 'Mild OA': '#E8772E', 'Moderate OA': '#D4A017', 'Severe OA': '#E85D75',
+}
+
+/** Distribution of mean meniscus thickness across the cohort. */
+export function ThicknessHistogram({ bins }) {
+  const data = bins.map((b) => ({ name: b.range, Studies: b.count }))
+  return (
+    <ResponsiveContainer width="100%" height={240}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 4 }}>
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis
+          dataKey="name" tick={AXIS} tickLine={false} axisLine={{ stroke: '#E8DCC8' }}
+          label={{ value: 'mean thickness (mm)', position: 'insideBottom', offset: -2, style: AXIS }}
+        />
+        <YAxis tick={AXIS} tickLine={false} axisLine={false} allowDecimals={false} />
+        <Tooltip {...TOOLTIP} formatter={(v) => `${v} studies`} />
+        <Bar dataKey="Studies" fill="#E8772E" radius={[4, 4, 0, 0]} maxBarSize={44} isAnimationActive={false} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+/** Group means with n labelled, used for OA class, sex, and age band. */
+export function GroupMeans({ groups, height = 240 }) {
+  const data = groups
+    .filter((g) => g.n > 0)
+    .map((g) => ({ name: `${g.label} (n=${g.n})`, key: g.label, Mean: g.mean }))
+  if (!data.length) return <EmptyChart label="No group has any study yet." />
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis dataKey="name" tick={AXIS} tickLine={false} axisLine={{ stroke: '#E8DCC8' }} />
+        <YAxis
+          tick={AXIS} tickLine={false} axisLine={false}
+          label={{ value: 'mm', angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
+        />
+        <Tooltip {...TOOLTIP} formatter={(v) => `${v} mm`} />
+        <Bar dataKey="Mean" radius={[4, 4, 0, 0]} maxBarSize={54} isAnimationActive={false}>
+          {data.map((d) => (
+            <Cell key={d.key} fill={SEVERITY_FILL[d.key] || '#E8772E'} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+/** Age against thickness, one point per study, coloured by OA class. */
+export function CohortScatter({ points }) {
+  const withAge = points.filter((p) => p.age != null && p.mean_thickness_mm != null)
+  if (!withAge.length) return <EmptyChart label="No study has both an age and a thickness." />
+  const byClass = {}
+  withAge.forEach((p) => {
+    const k = p.classification || 'Unclassified'
+    ;(byClass[k] = byClass[k] || []).push({ x: p.age, y: p.mean_thickness_mm, label: p.label })
+  })
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <ScatterChart margin={{ top: 8, right: 12, left: -18, bottom: 8 }}>
+        <CartesianGrid stroke={GRID} />
+        <XAxis
+          type="number" dataKey="x" name="Age" domain={['dataMin - 4', 'dataMax + 4']}
+          tick={AXIS} tickLine={false} axisLine={{ stroke: '#E8DCC8' }}
+          label={{ value: 'age (years)', position: 'insideBottom', offset: -4, style: AXIS }}
+        />
+        <YAxis
+          type="number" dataKey="y" name="Thickness" domain={['dataMin - 0.4', 'dataMax + 0.4']}
+          tick={AXIS} tickLine={false} axisLine={false}
+          label={{ value: 'mm', angle: -90, position: 'insideLeft', offset: 22, style: AXIS }}
+        />
+        <Tooltip
+          {...TOOLTIP} cursor={{ strokeDasharray: '3 3' }}
+          formatter={(v, n) => (n === 'Thickness' ? `${v} mm` : v)}
+        />
+        <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={7} />
+        {Object.entries(byClass).map(([cls, pts]) => (
+          <Scatter
+            key={cls} name={cls} data={pts}
+            fill={SEVERITY_FILL[cls] || '#8B7D6B'} isAnimationActive={false}
+          />
+        ))}
+      </ScatterChart>
+    </ResponsiveContainer>
+  )
+}
+
+/** Count distribution for implant sizes / systems. */
+export function CountBars({ items, color = '#3B82F6' }) {
+  if (!items?.length) return <EmptyChart label="Nothing to plot." />
+  const data = items.map((i) => ({ name: i.label, Studies: i.count }))
+  return (
+    <ResponsiveContainer width="100%" height={Math.max(180, data.length * 42)}>
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+        <CartesianGrid stroke={GRID} horizontal={false} />
+        <XAxis type="number" tick={AXIS} tickLine={false} axisLine={false} allowDecimals={false} />
+        <YAxis type="category" dataKey="name" tick={AXIS} tickLine={false} axisLine={false} width={128} />
+        <Tooltip {...TOOLTIP} formatter={(v) => `${v} studies`} />
+        <Bar dataKey="Studies" fill={color} radius={[0, 4, 4, 0]} maxBarSize={22} isAnimationActive={false} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+function EmptyChart({ label }) {
+  return (
+    <div className="h-[180px] flex items-center justify-center text-[12px] text-muted font-display">
+      {label}
     </div>
   )
 }

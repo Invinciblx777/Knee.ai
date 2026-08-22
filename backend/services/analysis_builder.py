@@ -89,9 +89,15 @@ def _assemble(
     }
 
 
-def build_simulated(img, data_digest: str, filename: str, patient: Dict, image, storage_dir: str) -> Dict:
-    """Deterministic simulation path — used for any upload that is not a sample."""
-    analysis_id = uuid.uuid4().hex[:12]
+def run_measurements(data_digest: str, patient: Dict, image) -> Dict:
+    """The measurement core, shared by the single-study and cohort paths.
+
+    Everything the simulation path does up to (but excluding) overlay rendering:
+    the same meniscus, OA, bone and implant calls, plus ROI detection and the
+    quality/uncertainty assessment derived from it. Rendering is deliberately
+    left outside so a cohort run does not pay to draw eight PNG variants per
+    study when nobody will look at them.
+    """
     age, sex, side = patient["age"], patient["sex"], patient["affected_side"]
 
     measurements = measure_meniscus(data_digest, age, sex)
@@ -102,6 +108,33 @@ def build_simulated(img, data_digest: str, filename: str, patient: Dict, image, 
     implant = match_implants(bones)
 
     roi = ip.detect_roi(image, side)
+    image_quality = q.assess_image_quality(image, roi)
+
+    return {
+        "measurements": measurements,
+        "assessment": assessment,
+        "kl": kl,
+        "bones": bones,
+        "implant": implant,
+        "roi": roi,
+        "quality": image_quality,
+        "uncertainty": q.measurement_uncertainty(image_quality, per_pixel_segmentation=False),
+    }
+
+
+def build_simulated(img, data_digest: str, filename: str, patient: Dict, image, storage_dir: str) -> Dict:
+    """Deterministic simulation path — used for any upload that is not a sample."""
+    analysis_id = uuid.uuid4().hex[:12]
+    side = patient["affected_side"]
+
+    core = run_measurements(data_digest, patient, image)
+    measurements = core["measurements"]
+    assessment = core["assessment"]
+    kl = core["kl"]
+    bones = core["bones"]
+    implant = core["implant"]
+    roi = core["roi"]
+
     zones = ip.compute_zones(data_digest, image.shape, roi, side)
     variants = ip.render_variants(image, zones, measurements, bones, storage_dir, analysis_id)
 
@@ -114,10 +147,8 @@ def build_simulated(img, data_digest: str, filename: str, patient: Dict, image, 
         },
     )
     record["images"]["roi"] = roi
-
-    image_quality = q.assess_image_quality(image, roi)
-    record["quality"] = image_quality
-    record["uncertainty"] = q.measurement_uncertainty(image_quality, per_pixel_segmentation=False)
+    record["quality"] = core["quality"]
+    record["uncertainty"] = core["uncertainty"]
     return record
 
 

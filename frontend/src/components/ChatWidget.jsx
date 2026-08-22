@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { getAnalysis, sendChatMessage } from '../lib/api'
+import { useLanguage } from '../lib/LanguageContext'
+import { LANGUAGE_NAMES } from '../lib/i18n'
 import Icon from './Icon'
-
-const GREETING =
-  "Hi, I'm the Knee.AI assistant. Ask me about a measurement, KL grading, implant " +
-  'sizing, or general knee OA questions.'
 
 /** Best-effort record context: whatever study the user is currently looking at. */
 function useCurrentRecord() {
@@ -38,6 +36,7 @@ export default function ChatWidget() {
   const [error, setError] = useState('')
   const listRef = useRef(null)
   const record = useCurrentRecord()
+  const { t, language } = useLanguage()
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight
@@ -52,7 +51,9 @@ export default function ChatWidget() {
     setError('')
     setSending(true)
     try {
-      const { reply } = await sendChatMessage(next, record)
+      // Sent as the full language name (e.g. "Tamil"), not the ISO code, so the
+      // model doesn't have to guess what "ta" means.
+      const { reply } = await sendChatMessage(next, record, LANGUAGE_NAMES[language])
       setMessages([...next, { role: 'assistant', content: reply }])
     } catch (e) {
       setError(e.message)
@@ -89,11 +90,11 @@ export default function ChatWidget() {
               </span>
               <div className="min-w-0">
                 <p className="text-[13px] font-display font-bold text-navy leading-tight truncate">
-                  Knee.AI Assistant
+                  {t('chatTitle')}
                 </p>
                 {record && (
                   <p className="text-[10px] text-muted font-display truncate">
-                    Viewing {record.patient?.name || 'current study'}
+                    {t('chatViewing')} {record.patient?.name || t('chatCurrentStudy')}
                   </p>
                 )}
               </div>
@@ -101,7 +102,7 @@ export default function ChatWidget() {
             <button
               onClick={() => setOpen(false)}
               className="w-7 h-7 rounded-[8px] flex items-center justify-center text-muted hover:bg-page transition-colors duration-150 shrink-0"
-              aria-label="Close chat"
+              aria-label={t('closeChat')}
             >
               <Icon name="close" size={15} />
             </button>
@@ -113,7 +114,7 @@ export default function ChatWidget() {
                 className="rounded-[12px] bg-page px-3.5 py-3 text-[12.5px] text-muted font-display leading-relaxed"
                 style={{ border: '2px solid #2D2016' }}
               >
-                {GREETING}
+                {t('chatGreeting')}
               </div>
             )}
             {messages.map((m, i) => (
@@ -134,7 +135,7 @@ export default function ChatWidget() {
                   className="rounded-[12px] bg-page px-3.5 py-2.5 text-[12px] text-muted font-display"
                   style={{ border: '2px solid #2D2016' }}
                 >
-                  Thinking…
+                  {t('thinking')}
                 </div>
               </div>
             )}
@@ -153,7 +154,7 @@ export default function ChatWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder="Ask something…"
+              placeholder={t('chatPlaceholder')}
               rows={1}
               className="input flex-1 h-10 py-2 text-[13px] resize-none"
               disabled={sending}
@@ -162,7 +163,7 @@ export default function ChatWidget() {
               onClick={send}
               disabled={sending || !input.trim()}
               className="btn-primary w-10 h-10 px-0 shrink-0"
-              aria-label="Send"
+              aria-label={t('send')}
             >
               <Icon name="send" size={15} />
             </button>
@@ -175,7 +176,7 @@ export default function ChatWidget() {
         className="w-14 h-14 rounded-full bg-accent text-white flex items-center justify-center
                    transition-transform duration-150 hover:scale-105"
         style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}
-        aria-label={open ? 'Close chat' : 'Open chat'}
+        aria-label={open ? t('closeChat') : t('openChat')}
       >
         <Icon name={open ? 'close' : 'chat'} size={22} />
       </button>

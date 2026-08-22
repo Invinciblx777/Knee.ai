@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { analyze, analyzeSample, listSamples, sampleImageUrl } from '../lib/api'
+import { useLanguage } from '../lib/LanguageContext'
 import { Card, Disclaimer, ErrorNote, Spinner } from '../components/ui'
 import Icon, { IconChip } from '../components/Icon'
 
@@ -16,6 +17,7 @@ const EMPTY = {
 
 export default function NewAnalysis() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const inputRef = useRef(null)
   const [form, setForm] = useState(EMPTY)
   const [file, setFile] = useState(null)
@@ -47,7 +49,7 @@ export default function NewAnalysis() {
     if (!next) return
     const ok = ACCEPT.split(',').some((ext) => next.name.toLowerCase().endsWith(ext))
     if (!ok) {
-      setError(`Unsupported file type. Accepted: ${ACCEPT}`)
+      setError(`${t('unsupportedFileType')} ${ACCEPT}`)
       return
     }
     setFile(next)
@@ -86,14 +88,12 @@ export default function NewAnalysis() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="page-title">New Analysis</h2>
-        <p className="text-[13px] text-muted mt-1.5 font-display">
-          Upload a knee X-ray or MRI and complete the patient intake to run both assessment modules.
-        </p>
+        <h2 className="page-title">{t('newAnalysisTitle')}</h2>
+        <p className="text-[13px] text-muted mt-1.5 font-display">{t('newAnalysisSubtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card eyebrow="Step 01" title="Imaging" icon="scan" tone="blue">
+        <Card eyebrow={t('stepImaging')} title={t('imaging')} icon="scan" tone="blue">
           <div
             onDragOver={(e) => {
               e.preventDefault()
@@ -127,11 +127,9 @@ export default function NewAnalysis() {
               <Icon name="upload" size={22} />
             </span>
             <p className="mt-4 text-[14px] font-display font-semibold text-navy">
-              {file ? file.name : 'Drop an image here, or click to browse'}
+              {file ? file.name : t('dropImagePrompt')}
             </p>
-            <p className="text-[12px] text-muted mt-1.5 font-display">
-              JPEG, PNG, BMP, TIFF or DICOM-lite · up to 25 MB
-            </p>
+            <p className="text-[12px] text-muted mt-1.5 font-display">{t('uploadPrompt')}</p>
             <input
               ref={inputRef}
               type="file"
@@ -148,17 +146,15 @@ export default function NewAnalysis() {
                   <img src={preview} alt="Upload preview" className="max-h-[340px] w-auto" />
                 ) : (
                   <div className="text-center px-6 py-10">
-                    <p className="text-[13px] font-display font-semibold text-navy/60">Preview unavailable</p>
-                    <p className="text-[12px] text-muted mt-1">
-                      DICOM-lite files render after the server decodes them.
-                    </p>
+                    <p className="text-[13px] font-display font-semibold text-navy/60">{t('previewUnavailable')}</p>
+                    <p className="text-[12px] text-muted mt-1">{t('dicomPreviewNote')}</p>
                   </div>
                 )}
               </div>
               <div className="flex items-center justify-between mt-3 text-[12px] text-muted font-display">
                 <span>{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                 <button className="text-accent font-semibold" onClick={(e) => { e.stopPropagation(); setFile(null) }}>
-                  Remove
+                  {t('remove')}
                 </button>
               </div>
             </div>
@@ -169,17 +165,17 @@ export default function NewAnalysis() {
               <div className="flex items-center gap-2.5">
                 <IconChip name="sparkle" tone="green" size="sm" />
                 <div>
-                  <h3 className="text-[13px] font-display font-semibold text-navy">Pre-analyzed samples</h3>
-                  <p className="text-[11px] text-muted font-display">One click runs the stored model output</p>
+                  <h3 className="text-[13px] font-display font-semibold text-navy">{t('preAnalyzedSamples')}</h3>
+                  <p className="text-[11px] text-muted font-display">{t('oneClickSamples')}</p>
                 </div>
               </div>
-              <span className="pill-pos">AI Ready</span>
+              <span className="pill-pos">{t('aiReady')}</span>
             </div>
 
             {samples === null ? (
-              <div className="mt-4"><Spinner label="Loading samples…" /></div>
+              <div className="mt-4"><Spinner label={t('loadingSamples')} /></div>
             ) : samples.length === 0 ? (
-              <p className="mt-3 text-[12px] text-muted font-display">No sample dataset installed.</p>
+              <p className="mt-3 text-[12px] text-muted font-display">{t('noSamplesInstalled')}</p>
             ) : (
               <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {samples.map((s) => (
@@ -211,7 +207,7 @@ export default function NewAnalysis() {
                       <span className="absolute inset-x-0 bottom-0 h-9 flex items-center justify-center
                                        bg-accent text-white text-[11px] font-display font-semibold translate-y-full
                                        transition-transform duration-200 group-hover:translate-y-0">
-                        {runningSample === s.source ? 'Running…' : 'Run analysis'}
+                        {runningSample === s.source ? t('runningEllipsis') : t('runAnalysisShort')}
                       </span>
                     </div>
                     <div className="p-2.5">
@@ -235,43 +231,47 @@ export default function NewAnalysis() {
           </div>
         </Card>
 
-        <Card eyebrow="Step 02" title="Patient Intake" icon="user" tone="slate">
+        <Card eyebrow={t('stepIntake')} title={t('patientIntake')} icon="user" tone="slate">
           <div className="space-y-4">
             <div>
-              <label className="label" htmlFor="name">Patient name</label>
+              <label className="label" htmlFor="name">{t('patientName')}</label>
               <input id="name" className="input" value={form.name} onChange={set('name')} placeholder="e.g. Jane Doe" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label" htmlFor="age">Age</label>
+                <label className="label" htmlFor="age">{t('age')}</label>
                 <input
                   id="age" type="number" min="1" max="120" className="input"
                   value={form.age} onChange={set('age')} placeholder="e.g. 64"
                 />
               </div>
               <div>
-                <label className="label" htmlFor="sex">Sex</label>
+                <label className="label" htmlFor="sex">{t('sex')}</label>
+                {/* value stays the English literal the backend expects ("Female"/"Male");
+                    only the visible label is translated. */}
                 <select id="sex" className="input" value={form.sex} onChange={set('sex')}>
-                  <option>Female</option>
-                  <option>Male</option>
+                  <option value="Female">{t('female')}</option>
+                  <option value="Male">{t('male')}</option>
                 </select>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label" htmlFor="imaging">Imaging type</label>
+                <label className="label" htmlFor="imaging">{t('imagingType')}</label>
+                {/* X-ray / MRI are imaging-modality terms used as-is across languages,
+                    left untranslated deliberately. */}
                 <select id="imaging" className="input" value={form.imaging_type} onChange={set('imaging_type')}>
                   <option>X-ray</option>
                   <option>MRI</option>
                 </select>
               </div>
               <div>
-                <label className="label" htmlFor="side">Affected side</label>
+                <label className="label" htmlFor="side">{t('affectedSide')}</label>
                 <select id="side" className="input" value={form.affected_side} onChange={set('affected_side')}>
-                  <option>Left</option>
-                  <option>Right</option>
+                  <option value="Left">{t('left')}</option>
+                  <option value="Right">{t('right')}</option>
                 </select>
               </div>
             </div>
@@ -283,12 +283,10 @@ export default function NewAnalysis() {
                 {busy
                   ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                   : <Icon name="sparkle" size={15} />}
-                {busy ? 'Running analysis…' : 'Run Analysis'}
+                {busy ? t('runningAnalysis') : t('runAnalysis')}
               </button>
               {!ready && (
-                <span className="text-[12px] text-muted font-display">
-                  Upload an image and fill in name and age to continue.
-                </span>
+                <span className="text-[12px] text-muted font-display">{t('readyHint')}</span>
               )}
             </div>
 

@@ -137,6 +137,12 @@ const PATHS = {
       <path d="M22 2 11 13" />
     </>
   ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z" />
+    </>
+  ),
 }
 
 export default function Icon({ name, size = 16, className = '', strokeWidth = 1.6 }) {

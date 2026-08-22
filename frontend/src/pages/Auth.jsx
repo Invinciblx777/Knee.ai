@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useLanguage } from '../lib/LanguageContext'
 import { Card, ErrorNote } from '../components/ui'
-import Icon from '../components/Icon'
 
 export default function Auth() {
   const [loading, setLoading] = useState(false)
@@ -9,24 +9,25 @@ export default function Auth() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [mode, setMode] = useState('login') // 'login' | 'signup'
+  const { t } = useLanguage()
 
   const handleAuth = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const authCall = mode === 'login' 
+    const authCall = mode === 'login'
       ? supabase.auth.signInWithPassword({ email, password })
       : supabase.auth.signUp({ email, password, options: { data: { role: 'patient' } } })
 
     const { error: err } = await authCall
-    
+
     if (err) {
       setError(err.message)
     } else if (mode === 'signup') {
       // Supabase auto-logins on signup unless confirm is enabled.
       // If it doesn't, we can just show a message or switch to login.
-      alert('Signup successful! Check your email if confirmation is required.')
+      alert(t('signupSuccess'))
     }
 
     setLoading(false)
@@ -37,16 +38,16 @@ export default function Auth() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-[32px] font-serif font-bold text-navy tracking-tight">Knee<span className="text-accent">.AI</span></h1>
-          <p className="text-muted text-[13px] font-display mt-1">Clinical decision support platform</p>
+          <p className="text-muted text-[13px] font-display mt-1">{t('authTagline')}</p>
         </div>
 
-        <Card title={mode === 'login' ? 'Sign In' : 'Create Account'} icon="user">
+        <Card title={mode === 'login' ? t('signIn') : t('createAccount')} icon="user">
           <form onSubmit={handleAuth} className="mt-4 space-y-4">
             {error && <ErrorNote>{error}</ErrorNote>}
-            
+
             <div>
               <label className="block text-[11px] font-display font-semibold text-muted uppercase tracking-wider mb-1.5">
-                Email Address
+                {t('emailAddress')}
               </label>
               <input
                 type="email"
@@ -57,10 +58,10 @@ export default function Auth() {
                 placeholder="doctor@clinic.com"
               />
             </div>
-            
+
             <div>
               <label className="block text-[11px] font-display font-semibold text-muted uppercase tracking-wider mb-1.5">
-                Password
+                {t('password')}
               </label>
               <input
                 type="password"
@@ -73,7 +74,7 @@ export default function Auth() {
             </div>
 
             <button type="submit" disabled={loading} className="btn-primary w-full h-10 mt-4 flex justify-center">
-              {loading ? 'Please wait...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
+              {loading ? t('pleaseWait') : (mode === 'login' ? t('signIn') : t('createAccount'))}
             </button>
           </form>
 
@@ -82,7 +83,7 @@ export default function Auth() {
               onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
               className="text-[12px] font-display font-semibold text-accent hover:text-navy transition-colors duration-200"
             >
-              {mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+              {mode === 'login' ? t('noAccount') : t('haveAccount')}
             </button>
           </div>
         </Card>

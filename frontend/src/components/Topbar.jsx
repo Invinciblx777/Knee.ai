@@ -1,31 +1,35 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { health } from '../lib/api'
+import { useLanguage } from '../lib/LanguageContext'
 import Icon from './Icon'
+import LanguageSwitcher from './LanguageSwitcher'
 
-const CRUMBS = {
-  '/': 'Dashboard',
-  '/new': 'New Analysis',
-  '/oa': 'Meniscus & OA Analysis',
-  '/implant': 'Measurements & Implant Sizing',
-  '/history': 'History',
-  '/research': 'Research Mode',
-  '/settings': 'Settings',
+const CRUMB_KEYS = {
+  '/': 'crumbOverview',
+  '/new': 'navNewAnalysis',
+  '/oa': 'crumbOa',
+  '/implant': 'crumbImplant',
+  '/history': 'navHistory',
+  '/research': 'crumbResearch',
+  '/settings': 'navSettings',
 }
 
 export default function Topbar({ onMenu }) {
   const [api, setApi] = useState('checking')
   const { pathname } = useLocation()
+  const { t } = useLanguage()
 
   useEffect(() => {
     health().then(() => setApi('online')).catch(() => setApi('offline'))
   }, [])
 
-  const crumb = CRUMBS[pathname] || (pathname.startsWith('/oa') ? 'Meniscus & OA Analysis'
-    : pathname.startsWith('/implant') ? 'Measurements & Implant Sizing'
-    : pathname.startsWith('/results') ? 'Analysis Result' : 'Overview')
+  const crumbKey = CRUMB_KEYS[pathname] || (pathname.startsWith('/oa') ? 'crumbOa'
+    : pathname.startsWith('/implant') ? 'crumbImplant'
+    : pathname.startsWith('/results') ? 'crumbAnalysisResult' : 'crumbOverview')
   const online = api === 'online'
   const dot = online ? 'bg-ok' : api === 'offline' ? 'bg-danger' : 'bg-ink-400'
+  const apiLabel = online ? t('apiOnline') : api === 'offline' ? t('apiOffline') : t('apiChecking')
 
   return (
     <header
@@ -49,11 +53,13 @@ export default function Topbar({ onMenu }) {
             Knee<span className="text-accent">.AI</span>
           </span>
           <Icon name="chevron" size={13} className="text-ink-300 shrink-0" />
-          <span className="text-[13px] font-display text-muted truncate">{crumb}</span>
+          <span className="text-[13px] font-display text-muted truncate">{t(crumbKey)}</span>
         </nav>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
+        <LanguageSwitcher />
+
         <span
           className="hidden sm:inline-flex items-center gap-2 h-8 px-3 rounded-full
                      bg-surface text-[12px] font-display font-medium text-muted"
@@ -65,7 +71,7 @@ export default function Topbar({ onMenu }) {
             )}
             <span className={`relative inline-flex w-2 h-2 rounded-full ${dot}`} />
           </span>
-          API {online ? 'Online' : api === 'offline' ? 'Offline' : 'Checking'}
+          {apiLabel}
         </span>
       </div>
     </header>

@@ -1,5 +1,7 @@
 """AI-generated food & diet advice for a patient's knee analysis."""
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -11,9 +13,10 @@ router = APIRouter(prefix="/api", tags=["advice"])
 
 class AdviceRequest(BaseModel):
     record: dict
+    language: Optional[str] = None
 
 
-def _build_messages(record: dict) -> list:
+def _build_messages(record: dict, language: Optional[str] = None) -> list:
     patient = record.get("patient", {})
     meniscus = record.get("meniscus", {})
     assessment = meniscus.get("assessment", {})
@@ -30,7 +33,7 @@ def _build_messages(record: dict) -> list:
         "answer as short paragraphs, and for any list use a line starting with a plain hyphen "
         "and a space ('- item'), nothing else. End with one sentence noting this is general "
         "guidance, not a substitute for their clinician or a registered dietitian."
-    )
+    ) + fc.language_instruction(language)
     user = (
         f"Patient: {patient.get('name', 'the patient')}, age {patient.get('age')}, "
         f"sex {patient.get('sex')}, affected knee: {patient.get('affected_side')}.\n"
@@ -45,7 +48,7 @@ def _build_messages(record: dict) -> list:
 
 @router.post("/advice")
 def get_food_advice(req: AdviceRequest, user_id: str = Depends(get_current_user)):
-    messages = _build_messages(req.record)
+    messages = _build_messages(req.record, req.language)
     try:
         advice = fc.chat(messages)
     except fc.FeatherlessError as e:

@@ -86,19 +86,30 @@ export const updateAdvice = async (id, adviceText) => {
   return { success: true }
 }
 
-/** One turn of the floating assistant chat. `messages` is the full history so far. */
-export const sendChatMessage = (messages, record) =>
+/**
+ * One turn of the floating assistant chat. `messages` is the full history so
+ * far; `language` is the full English name of the reply language (e.g.
+ * "Tamil"), omitted for English so the request stays identical to before
+ * this feature existed.
+ */
+export const sendChatMessage = (messages, record, language) =>
   fetchWithAuth(`${BASE}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, record: record || undefined }),
+    body: JSON.stringify({
+      messages, record: record || undefined,
+      language: language && language !== 'English' ? language : undefined,
+    }),
   }).then(handle)
 
-export const getFoodAdvice = (record) =>
+export const getFoodAdvice = (record, language) =>
   fetchWithAuth(`${BASE}/advice`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ record }),
+    body: JSON.stringify({
+      record,
+      language: language && language !== 'English' ? language : undefined,
+    }),
   }).then(handle)
 
 /** Batch-analyse studies and return cohort statistics. */

@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { getImplants } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { AuthContext } from '../App'
+import { useLanguage } from '../lib/LanguageContext'
 import { Card, ErrorNote, Spinner } from '../components/ui'
 import Icon from '../components/Icon'
 
@@ -14,6 +15,7 @@ const THRESHOLDS = [
 
 export default function Settings() {
   const { session } = useContext(AuthContext)
+  const { t } = useLanguage()
   const [db, setDb] = useState(null)
   const [error, setError] = useState('')
   const [system, setSystem] = useState(null)
@@ -44,17 +46,17 @@ export default function Settings() {
         </p>
       </div>
 
-      <Card eyebrow="Account" title="Signed In As" icon="user" tone="navy">
+      <Card eyebrow="Account" title={t('signedInAs')} icon="user" tone="navy">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <div className="text-[14px] font-display font-medium text-navy">{session?.user?.email}</div>
             <div className="text-[12px] text-muted font-display capitalize mt-0.5">
-              {session?.user?.user_metadata?.role || 'patient'} account
+              {session?.user?.user_metadata?.role || 'patient'} {t('account')}
             </div>
           </div>
           <button onClick={handleLogout} disabled={loggingOut} className="btn-dark h-9 px-4 text-[13px]">
             <Icon name="logout" size={15} />
-            {loggingOut ? 'Signing out…' : 'Sign Out'}
+            {loggingOut ? t('signingOut') : t('signOut')}
           </button>
         </div>
       </Card>

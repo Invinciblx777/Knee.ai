@@ -15,6 +15,21 @@ class FeatherlessError(Exception):
     pass
 
 
+# Whitelisted, not free text: callers pass this straight into a system prompt,
+# so it must never be arbitrary client-supplied text (a prompt-injection
+# vector). Only an exact match is used; anything else is silently ignored.
+SUPPORTED_LANGUAGES = {"Hindi", "Tamil", "Malayalam", "Telugu"}
+
+
+def language_instruction(language: Optional[str]) -> str:
+    if language not in SUPPORTED_LANGUAGES:
+        return ""
+    return (
+        "\n\nRespond in {}, written in {} script, regardless of what language "
+        "the user or the data is in."
+    ).format(language, language)
+
+
 def chat(messages: List[dict], model: Optional[str] = None, max_tokens: int = 900, temperature: float = 0.5) -> str:
     if not FEATHERLESS_API_KEY:
         raise FeatherlessError("FEATHERLESS_API_KEY is not configured.")

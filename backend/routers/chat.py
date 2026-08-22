@@ -44,6 +44,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     record: Optional[dict] = None
+    language: Optional[str] = None
 
 
 def _context_line(record: dict) -> str:
@@ -89,6 +90,7 @@ def send_message(req: ChatRequest, user_id: str = Depends(get_current_user)):
     system = BASE_SYSTEM
     if req.record:
         system = system + "\n\n" + _context_line(req.record)
+    system = system + fc.language_instruction(req.language)
 
     messages = [{"role": "system", "content": system}]
     messages += [{"role": m.role, "content": m.content} for m in req.messages]

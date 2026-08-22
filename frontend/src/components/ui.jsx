@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useLanguage } from '../lib/LanguageContext'
 import Icon, { IconChip } from './Icon'
 
 export function Card({ title, eyebrow, icon, tone = 'slate', action, children, className = '', bodyClass = 'card-pad' }) {
@@ -160,13 +161,11 @@ export function ErrorNote({ children }) {
 }
 
 export function Disclaimer() {
+  const { t } = useLanguage()
   return (
     <div className="flex items-start gap-2.5 pt-6" style={{ borderTop: '1px solid #E8DCC8' }}>
       <Icon name="shield" size={15} className="text-ink-300 mt-px shrink-0" />
-      <p className="text-[12px] text-muted leading-relaxed">
-        This tool is intended for clinical decision support and research. Final diagnosis remains with the
-        clinician. All measurements shown are produced by an AI segmentation pipeline.
-      </p>
+      <p className="text-[12px] text-muted leading-relaxed">{t('disclaimer')}</p>
     </div>
   )
 }

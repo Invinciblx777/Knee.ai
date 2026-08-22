@@ -1,14 +1,15 @@
 import { NavLink } from 'react-router-dom'
+import { useLanguage } from '../lib/LanguageContext'
 import Icon from './Icon'
 
 const NAV = [
-  { to: '/', label: 'Dashboard', icon: 'dashboard', end: true },
-  { to: '/new', label: 'New Analysis', icon: 'scan' },
-  { to: '/oa', label: 'Meniscus & OA', icon: 'ruler' },
-  { to: '/implant', label: 'Implant Sizing', icon: 'implant' },
-  { to: '/history', label: 'History', icon: 'history' },
-  { to: '/research', label: 'Research', icon: 'layers' },
-  { to: '/settings', label: 'Settings', icon: 'settings' },
+  { to: '/', key: 'navDashboard', icon: 'dashboard', end: true },
+  { to: '/new', key: 'navNewAnalysis', icon: 'scan' },
+  { to: '/oa', key: 'navOa', icon: 'ruler' },
+  { to: '/implant', key: 'navImplant', icon: 'implant' },
+  { to: '/history', key: 'navHistory', icon: 'history' },
+  { to: '/research', key: 'navResearch', icon: 'layers' },
+  { to: '/settings', key: 'navSettings', icon: 'settings' },
 ]
 
 function Item({ to, label, icon, end, onClick }) {
@@ -42,6 +43,8 @@ function Item({ to, label, icon, end, onClick }) {
 }
 
 export default function Sidebar({ open, onClose }) {
+  const { t } = useLanguage()
+
   return (
     <>
       {open && (
@@ -66,7 +69,7 @@ export default function Sidebar({ open, onClose }) {
               Knee<span className="text-accent">.AI</span>
             </div>
             <div className="text-ink-600 text-[10px] font-display tracking-widest uppercase">
-              Analysis Platform
+              {t('tagline')}
             </div>
           </div>
         </div>
@@ -77,7 +80,7 @@ export default function Sidebar({ open, onClose }) {
           </p>
           <div className="space-y-1.5">
             {NAV.map((n) => (
-              <Item key={n.to} {...n} onClick={onClose} />
+              <Item key={n.to} to={n.to} icon={n.icon} end={n.end} label={t(n.key)} onClick={onClose} />
             ))}
           </div>
         </nav>
@@ -86,10 +89,10 @@ export default function Sidebar({ open, onClose }) {
           <div className="rounded-[10px] bg-white/[0.04] ring-1 ring-white/[0.06] p-3.5">
             <div className="flex items-center gap-2 text-ink-300">
               <Icon name="shield" size={14} className="text-ok" />
-              <span className="text-[11px] font-display font-semibold">Clinical Tool</span>
+              <span className="text-[11px] font-display font-semibold">{t('clinicalTool')}</span>
             </div>
             <p className="mt-1.5 text-[10px] leading-relaxed text-ink-600">
-              Decision support only. Final diagnosis remains with the clinician.
+              {t('clinicalToolDesc')}
             </p>
           </div>
         </div>

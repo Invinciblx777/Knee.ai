@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useParams } from 'react-router-dom'
 import { getAnalysis, downloadReport, getFoodAdvice, listAnalyses } from '../lib/api'
+import { useLanguage } from '../lib/LanguageContext'
+import { LANGUAGE_NAMES } from '../lib/i18n'
 import { Card, CompareBar, ErrorNote, SeverityBadge, Spinner } from './ui'
 import Icon, { IconChip } from './Icon'
 
@@ -10,6 +12,7 @@ const QUALITY_TONE = { good: 'bg-ok', fair: 'bg-warn', low: 'bg-danger' }
 
 /** Banner shown when the film is too degraded to trust the automated numbers. */
 function ReviewBanner({ quality }) {
+  const { t } = useLanguage()
   const weak = quality.factors.filter((f) => f.status === 'low')
   return (
     <div
@@ -18,7 +21,7 @@ function ReviewBanner({ quality }) {
     >
       <Icon name="alert" size={17} className="text-warn mt-px shrink-0" />
       <div>
-        <p className="text-[13px] font-display font-bold text-navy">Clinical review recommended</p>
+        <p className="text-[13px] font-display font-bold text-navy">{t('reviewRecommended')}</p>
         <p className="mt-1 text-[12px] text-muted font-display leading-relaxed">
           Image quality scored {quality.score_pct}% ({quality.level_label.toLowerCase()})
           {weak.length > 0 && <> — limiting {weak.map((f) => f.name.toLowerCase()).join(' and ')}</>}.
@@ -121,6 +124,7 @@ function ModuleHeader({ n, title, subtitle, tone }) {
 }
 
 function PatientHeader({ result, onGetAdvice, gettingAdvice }) {
+  const { t } = useLanguage()
   const p = result.patient
   const fields = [
     ['Age', p.age],
@@ -171,11 +175,11 @@ function PatientHeader({ result, onGetAdvice, gettingAdvice }) {
         <div className="flex items-center gap-2.5 flex-wrap">
           <button className="btn-ghost" onClick={onGetAdvice} disabled={gettingAdvice}>
             <Icon name="leaf" size={15} />
-            {gettingAdvice ? 'Thinking...' : 'Get AI Food Diet'}
+            {gettingAdvice ? t('thinking') : t('getAiFoodDiet')}
           </button>
           <button className="btn-dark" onClick={handleDownload} disabled={downloading}>
             <Icon name="download" size={15} />
-            {downloading ? 'Generating...' : 'Generate Report'}
+            {downloading ? t('generatingReport') : t('generateReport')}
           </button>
         </div>
       </div>
@@ -327,16 +331,17 @@ function ImplantTable({ implant }) {
 }
 /** Tabs between the two clinical modules for the same study. */
 function ModuleTabs({ id }) {
+  const { t } = useLanguage()
   const tabs = [
-    { to: `/oa/${id}`, label: 'Meniscus & OA Analysis', icon: 'ruler' },
-    { to: `/implant/${id}`, label: 'Measurements & Implant Sizing', icon: 'implant' },
+    { to: `/oa/${id}`, label: t('tabMeniscusOa'), icon: 'ruler' },
+    { to: `/implant/${id}`, label: t('tabImplant'), icon: 'implant' },
   ]
   return (
     <div className="flex flex-wrap gap-2">
-      {tabs.map((t) => (
+      {tabs.map((tab) => (
         <NavLink
-          key={t.to}
-          to={t.to}
+          key={tab.to}
+          to={tab.to}
           className={({ isActive }) =>
             [
               'inline-flex items-center gap-2 h-10 px-4 rounded-[10px] whitespace-nowrap',
@@ -349,8 +354,8 @@ function ModuleTabs({ id }) {
             boxShadow: isActive ? '3px 3px 0 #2D2016' : '2px 2px 0 #2D2016',
           })}
         >
-          <Icon name={t.icon} size={15} />
-          {t.label}
+          <Icon name={tab.icon} size={15} />
+          {tab.label}
         </NavLink>
       ))}
     </div>
@@ -367,6 +372,7 @@ function ModuleTabs({ id }) {
 export function AnalysisShell({ children }) {
   const { id } = useParams()
   const { state } = useLocation()
+  const { t, language } = useLanguage()
   const [result, setResult] = useState(state?.result ?? null)
   const [error, setError] = useState('')
   const [empty, setEmpty] = useState(false)
@@ -378,7 +384,7 @@ export function AnalysisShell({ children }) {
     setGettingAdvice(true)
     setAdviceError('')
     try {
-      const { advice } = await getFoodAdvice(result)
+      const { advice } = await getFoodAdvice(result, LANGUAGE_NAMES[language])
       setFoodAdvice(advice)
     } catch (e) {
       setAdviceError(e.message)
@@ -443,13 +449,13 @@ export function AnalysisShell({ children }) {
       <ModuleTabs id={result.analysis_id} />
 
       {result.advice && (
-        <Card eyebrow="Clinician Note" title="Doctor's Advice" icon="file" tone="green">
+        <Card eyebrow="Clinician Note" title={t('clinicianNote')} icon="file" tone="green">
           <p className="text-[13px] text-navy font-display leading-relaxed whitespace-pre-wrap">{result.advice}</p>
         </Card>
       )}
 
       {(foodAdvice || adviceError) && (
-        <Card eyebrow="AI Generated" title="Food & Diet Advice" icon="leaf" tone="green">
+        <Card eyebrow={t('aiGenerated')} title={t('foodDietAdvice')} icon="leaf" tone="green">
           {adviceError ? (
             <ErrorNote>{adviceError}</ErrorNote>
           ) : (

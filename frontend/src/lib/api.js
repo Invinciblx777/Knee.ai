@@ -40,6 +40,17 @@ export const health = () => fetch(`${BASE}/health`).then(handle)
 
 export const imageUrl = (filename) => `${BASE}/images/${filename}`
 export const reportUrl = (id) => `${BASE}/report/${id}`
+// Rewrite backend-returned relative sample image paths to the correct absolute URL.
+// The backend returns "/api/samples/{source}/image" but in production the frontend
+// is on a different domain than the backend, so we must prefix with BASE's origin.
+export const sampleImageUrl = (relOrAbs) => {
+  if (!relOrAbs) return ''
+  if (relOrAbs.startsWith('http')) return relOrAbs
+  // relOrAbs is like "/api/samples/OAI_sample_01/image"
+  // BASE is like "https://kneeai.vercel.app/api" or "/api" for local dev
+  const origin = BASE.startsWith('http') ? new URL(BASE).origin : ''
+  return `${origin}${relOrAbs}`
+}
 
 /** Key into images.variants for a given overlay toggle state. */
 export function variantKey(toggles) {

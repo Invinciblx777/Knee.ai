@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { analyze, analyzeSample, listSamples } from '../lib/api'
+import { analyze, analyzeSample, listSamples, sampleImageUrl } from '../lib/api'
 import { Card, Disclaimer, ErrorNote, Spinner } from '../components/ui'
 import Icon, { IconChip } from '../components/Icon'
 
@@ -189,7 +189,7 @@ export default function NewAnalysis() {
                   >
                     <div className="relative aspect-[3/4] bg-stage overflow-hidden">
                       <img
-                        src={s.image_url} alt={s.source}
+                        src={sampleImageUrl(s.image_url)} alt={s.source}
                         className="w-full h-full object-cover transition-transform duration-300
                                    group-hover:scale-[1.06]"
                       />

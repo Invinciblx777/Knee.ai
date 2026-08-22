@@ -10,6 +10,28 @@ import { ConfidenceBars, ThicknessComparison, ThicknessRadar } from '../componen
 
 const KL_COLOR = ['#2D9F6F', '#E8772E', '#D4A017', '#E85D75', '#E85D75']
 
+/** Big labelled divider so the two clinical modules read as separate sections. */
+function ModuleHeader({ n, title, subtitle, tone }) {
+  return (
+    <div className="mb-5">
+      <div className="flex items-center gap-3 flex-wrap">
+        <span
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full ${tone} text-white
+                      text-[12px] font-display font-bold uppercase tracking-wider`}
+          style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}
+        >
+          Module {n}
+        </span>
+        <h2 className="text-[21px] font-display font-bold text-navy tracking-[-0.02em] leading-tight">
+          {title}
+        </h2>
+      </div>
+      <p className="mt-1.5 text-[13px] text-muted font-display">{subtitle}</p>
+      <div className="mt-4" style={{ borderTop: '2px solid #2D2016' }} />
+    </div>
+  )
+}
+
 function PatientHeader({ result, onGetAdvice, gettingAdvice }) {
   const p = result.patient
   const fields = [
@@ -263,6 +285,12 @@ export default function Results() {
     <div className="space-y-8 animate-fade-up">
       <PatientHeader result={result} onGetAdvice={handleGetAdvice} gettingAdvice={gettingAdvice} />
 
+      {result.advice && (
+        <Card eyebrow="Clinician Note" title="Doctor's Advice" icon="file" tone="green">
+          <p className="text-[13px] text-navy font-display leading-relaxed whitespace-pre-wrap">{result.advice}</p>
+        </Card>
+      )}
+
       {(foodAdvice || adviceError) && (
         <Card eyebrow="AI Generated" title="Food & Diet Advice" icon="leaf" tone="green">
           {adviceError ? (
@@ -274,17 +302,15 @@ export default function Results() {
       )}
 
       {/* ═══════════════════════════════════════════════════════
-          MODULE 1 — OA Assessment
+          MODULE 1 — Medial meniscus thickness + OA analysis
           ═══════════════════════════════════════════════════════ */}
       <div>
-        <div className="flex items-center gap-3 mb-4">
-          <span
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ok text-white text-[12px] font-display font-bold uppercase tracking-wider"
-            style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}
-          >
-            Module 1 — OA Assessment
-          </span>
-        </div>
+        <ModuleHeader
+          n={1}
+          tone="bg-ok"
+          title="Medial Meniscus Thickness & OA Analysis"
+          subtitle="Meniscus calliper measurements, KL grading, and osteoarthritis classification against age- and sex-matched population means."
+        />
 
         {/* metric row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -413,22 +439,54 @@ export default function Results() {
       <Viewer result={result} />
 
       {/* ═══════════════════════════════════════════════════════
-          MODULE 2 — Implant Sizing
+          MODULE 2 — Femur/tibia measurements + implant sizing
           ═══════════════════════════════════════════════════════ */}
       <div>
-        <div className="flex items-center gap-3 mb-4">
-          <span
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent text-white text-[12px] font-display font-bold uppercase tracking-wider"
-            style={{ border: '2px solid #2D2016', boxShadow: '3px 3px 0 #2D2016' }}
-          >
-            Module 2 — Implant Sizing
-          </span>
-        </div>
+        <ModuleHeader
+          n={2}
+          tone="bg-accent"
+          title="Femur / Tibia Measurements & Implant Sizing"
+          subtitle="Extracted femoral and tibial anatomy, matched against the implant catalogue to rank patient-specific sizes."
+        />
 
-        {/* Primary implant quick view */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        {/* Step 1 — the anatomy the matcher consumes */}
+        <Card
+          eyebrow="Step 1 · Extracted Anatomy"
+          title="Femoral & Tibial Measurements"
+          icon="ruler"
+          tone="amber"
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[
+              ['Femoral ML', bones.femoral_ml_mm, 'mm', 'Medio-lateral width'],
+              ['Femoral AP', bones.femoral_ap_mm, 'mm', 'Antero-posterior depth'],
+              ['Tibial ML', bones.tibial_ml_mm, 'mm', 'Medio-lateral width'],
+              ['Tibial AP', bones.tibial_ap_mm, 'mm', 'Antero-posterior depth'],
+              ['Tibial Slope', bones.tibial_slope_deg, '°', 'Posterior slope angle'],
+            ].map(([k, v, u, desc]) => (
+              <div
+                key={k}
+                className="rounded-[10px] bg-page px-3 py-3 transition-colors duration-150 hover:bg-surface"
+                style={{ border: '2px solid #2D2016' }}
+              >
+                <div className="eyebrow text-[9px]">{k}</div>
+                <div className="mt-1.5 text-[20px] font-display font-bold text-navy leading-none tnum">
+                  {v}<span className="text-[11px] font-semibold text-muted ml-1">{u}</span>
+                </div>
+                <div className="mt-1.5 text-[10px] text-muted font-display leading-tight">{desc}</div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-[11px] text-muted font-display">
+            Aspect ratios — femur {bones.aspect_ratio_femur} · tibia {bones.aspect_ratio_tibia}.
+            These four linear dimensions are what the matcher compares against each catalogued implant size.
+          </p>
+        </Card>
+
+        {/* Step 2 — what the matcher returned */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 mb-6">
           <Tile
-            label="Primary Implant"
+            label="Recommended Implant"
             icon="implant"
             tone="blue"
             footer={
@@ -445,46 +503,39 @@ export default function Results() {
             <p className="mt-2 text-[12px] text-muted font-display">{primary.type}</p>
           </Tile>
 
-          <div className="flex flex-col gap-4">
-            {result.advice && (
-              <Tile
-                label="Doctor's Advice"
-                icon="file"
-                tone="green"
-              >
-                <div className="text-[13px] text-navy font-display leading-relaxed whitespace-pre-wrap mt-2">
-                  {result.advice}
+          <Tile
+            label="Fit Deviation"
+            icon="ruler"
+            tone="amber"
+            footer={
+              <p className="card-sub font-display">
+                Largest single-dimension gap between patient anatomy and the recommended size.
+              </p>
+            }
+          >
+            <div className="metric">
+              {primary.max_abs_delta_mm}
+              <span className="text-[15px] font-semibold text-muted ml-1.5 tracking-normal">mm</span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {[
+                ['Femoral ML', primary.deltas_mm.femoral_ml],
+                ['Femoral AP', primary.deltas_mm.femoral_ap],
+                ['Tibial ML', primary.deltas_mm.tibial_ml],
+                ['Tibial AP', primary.deltas_mm.tibial_ap],
+              ].map(([k, d]) => (
+                <div key={k} className="flex items-center justify-between gap-2 text-[11px] font-display">
+                  <span className="text-muted">{k}</span>
+                  <span className={d < 0 ? 'pill-neg' : 'pill-pos'}>
+                    {d > 0 ? '+' : ''}{d} mm
+                  </span>
                 </div>
-              </Tile>
-            )}
-            
-            <Tile label="Bone Measurements" icon="activity" tone="amber">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
-                {[
-                  ['Femoral ML', bones.femoral_ml_mm, 'mm'],
-                  ['Femoral AP', bones.femoral_ap_mm, 'mm'],
-                  ['Tibial ML', bones.tibial_ml_mm, 'mm'],
-                  ['Tibial AP', bones.tibial_ap_mm, 'mm'],
-                  ['Tibial Slope', bones.tibial_slope_deg, '°'],
-                ].map(([k, v, u]) => (
-                  <div
-                    key={k}
-                    className="rounded-[10px] bg-page px-3 py-2.5
-                               transition-colors duration-150 hover:bg-surface"
-                    style={{ border: '2px solid #2D2016' }}
-                  >
-                    <div className="eyebrow text-[9px]">{k}</div>
-                    <div className="mt-1 text-[18px] font-display font-bold text-navy leading-none tnum">
-                      {v}<span className="text-[11px] font-semibold text-muted ml-1">{u}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Tile>
-          </div>
+              ))}
+            </div>
+          </Tile>
         </div>
 
-        <Card eyebrow="Implant Catalogue" title="Implant Size Matching" icon="implant" tone="blue">
+        <Card eyebrow="Step 2 · Ranked Matches" title="Implant Size Matching" icon="implant" tone="blue">
           <ImplantTable implant={result.implant} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8 items-start">

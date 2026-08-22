@@ -410,6 +410,16 @@ def encode_png(img: np.ndarray) -> bytes:
     return buf.tobytes()
 
 
+def _encode_data_url(img: np.ndarray) -> str:
+    """Encode an image as a base64 JPEG data URL (much smaller than PNG)."""
+    import base64
+    ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 82])
+    if not ok:
+        raise RuntimeError("JPEG encode failed")
+    b64 = base64.b64encode(buf.tobytes()).decode("ascii")
+    return "data:image/jpeg;base64,{}".format(b64)
+
+
 def save_png(img: np.ndarray, path: str) -> str:
     with open(path, "wb") as fh:
         fh.write(encode_png(img))
@@ -424,18 +434,23 @@ def render_variants(
     out_dir: str,
     analysis_id: str,
     polygons: Optional[Dict[str, List]] = None,
-) -> Dict[str, str]:
+) -> Dict[str, Dict[str, str]]:
     """Pre-render every on/off combination of the three overlays.
 
-    Keys are sorted structure names joined by '-', e.g. 'femur-meniscus'.
-    'none' is the untouched original.
+    Returns ``{"filenames": {...}, "data": {...}}`` where *filenames* maps
+    variant keys to on-disk basenames and *data* maps them to base64 JPEG
+    data-URLs.  The inline data lets the frontend display images immediately
+    without a second round-trip — critical in serverless environments where
+    ``/tmp`` is ephemeral.
     """
     os.makedirs(out_dir, exist_ok=True)
-    variants = {}
+    filenames = {}
+    data = {}
 
     original_path = os.path.join(out_dir, "{}_original.png".format(analysis_id))
     save_png(img, original_path)
-    variants["none"] = os.path.basename(original_path)
+    filenames["none"] = os.path.basename(original_path)
+    data["none"] = _encode_data_url(img)
 
     for mask in range(1, 8):
         active = [s for i, s in enumerate(STRUCTURES) if mask & (1 << i)]
@@ -443,6 +458,8 @@ def render_variants(
         rendered = annotate(img, zones, measurements, bones, active, polygons)
         path = os.path.join(out_dir, "{}_{}.png".format(analysis_id, key))
         save_png(rendered, path)
-        variants[key] = os.path.basename(path)
+        filenames[key] = os.path.basename(path)
+        data[key] = _encode_data_url(rendered)
 
-    return variants
+    return {"filenames": filenames, "data": data}
+

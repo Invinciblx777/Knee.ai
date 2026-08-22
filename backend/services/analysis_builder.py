@@ -51,10 +51,13 @@ def _assemble(
     bones: Dict,
     implant: Dict,
     img,
-    variants: Dict,
+    variants_bundle: Dict,
     mode: str,
     provenance: Dict,
 ) -> Dict:
+    # variants_bundle has {"filenames": {...}, "data": {...}}
+    file_variants = variants_bundle.get("filenames", variants_bundle)
+    data_variants = variants_bundle.get("data", {})
     return {
         "analysis_id": analysis_id,
         "created_at": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -76,7 +79,8 @@ def _assemble(
         "implant": implant,
         "bone_measurements": bones,
         "images": {
-            "variants": variants,
+            "variants": file_variants,
+            "variants_data": data_variants,
             "base_url": "/api/images",
             "width": int(img.shape[1]),
             "height": int(img.shape[0]),

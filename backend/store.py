@@ -37,10 +37,16 @@ def _read_all() -> List[Dict]:
 
 
 def save(analysis: Dict) -> None:
+    # Strip inline base64 data URLs before persisting — they're large and only
+    # needed for the immediate API response, not for historical retrieval.
+    import copy
+    to_store = copy.deepcopy(analysis)
+    to_store.get("images", {}).pop("variants_data", None)
+
     with _lock:
         records = _read_all()
-        records = [r for r in records if r["analysis_id"] != analysis["analysis_id"]]
-        records.insert(0, analysis)
+        records = [r for r in records if r["analysis_id"] != to_store["analysis_id"]]
+        records.insert(0, to_store)
         with open(INDEX_PATH, "w") as fh:
             json.dump(records[:200], fh, indent=2)
 

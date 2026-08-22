@@ -38,7 +38,13 @@ export const deleteAnalysis = (id) =>
 export const getImplants = () => fetch(`${BASE}/implants`).then(handle)
 export const health = () => fetch(`${BASE}/health`).then(handle)
 
-export const imageUrl = (filename) => `${BASE}/images/${filename}`
+// If the value is already a data URL (base64), return it directly.
+// Otherwise construct the API endpoint URL for file-based serving.
+export const imageUrl = (filenameOrDataUrl) => {
+  if (!filenameOrDataUrl) return ''
+  if (filenameOrDataUrl.startsWith('data:')) return filenameOrDataUrl
+  return `${BASE}/images/${filenameOrDataUrl}`
+}
 export const reportUrl = (id) => `${BASE}/report/${id}`
 // Rewrite backend-returned relative sample image paths to the correct absolute URL.
 // The backend returns "/api/samples/{source}/image" but in production the frontend

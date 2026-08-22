@@ -11,9 +11,14 @@ const STRUCTURES = [
 export default function Viewer({ result }) {
   const [toggles, setToggles] = useState({ femur: true, meniscus: true, tibia: true })
 
-  const variants = result.images.variants
-  const original = imageUrl(variants.none)
-  const annotated = imageUrl(variants[variantKey(toggles)])
+  // Prefer inline base64 data URLs (always available on fresh analysis),
+  // fall back to file-based variants for historical records.
+  const dataVariants = result.images.variants_data || {}
+  const fileVariants = result.images.variants
+  const getVariant = (key) => dataVariants[key] || fileVariants[key]
+
+  const original = imageUrl(getVariant('none'))
+  const annotated = imageUrl(getVariant(variantKey(toggles)))
   const activeCount = STRUCTURES.filter((s) => toggles[s.key]).length
 
   const flip = (k) => setToggles((t) => ({ ...t, [k]: !t[k] }))

@@ -4,6 +4,8 @@ import Icon from './Icon'
 const NAV = [
   { to: '/', label: 'Dashboard', icon: 'dashboard', end: true },
   { to: '/new', label: 'New Analysis', icon: 'scan' },
+  { to: '/oa', label: 'Meniscus & OA', icon: 'ruler' },
+  { to: '/implant', label: 'Implant Sizing', icon: 'implant' },
   { to: '/history', label: 'History', icon: 'history' },
   { to: '/research', label: 'Research', icon: 'layers' },
   { to: '/settings', label: 'Settings', icon: 'settings' },

@@ -9,6 +9,8 @@ import History from './pages/History'
 import Research from './pages/Research'
 import Settings from './pages/Settings'
 import Results from './pages/Results'
+import OaAnalysis from './pages/OaAnalysis'
+import ImplantSizing from './pages/ImplantSizing'
 import Auth from './pages/Auth'
 
 export const AuthContext = createContext(null)
@@ -71,6 +73,10 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/new" element={<NewAnalysis />} />
               <Route path="/results/:id" element={<Results />} />
+              <Route path="/oa" element={<OaAnalysis />} />
+              <Route path="/oa/:id" element={<OaAnalysis />} />
+              <Route path="/implant" element={<ImplantSizing />} />
+              <Route path="/implant/:id" element={<ImplantSizing />} />
               <Route path="/history" element={<History />} />
               <Route path="/research" element={<Research />} />
               <Route path="/settings" element={<Settings />} />

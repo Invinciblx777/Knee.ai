@@ -6,6 +6,8 @@ import Icon from './Icon'
 const CRUMBS = {
   '/': 'Dashboard',
   '/new': 'New Analysis',
+  '/oa': 'Meniscus & OA Analysis',
+  '/implant': 'Measurements & Implant Sizing',
   '/history': 'History',
   '/research': 'Research Mode',
   '/settings': 'Settings',
@@ -19,7 +21,9 @@ export default function Topbar({ onMenu }) {
     health().then(() => setApi('online')).catch(() => setApi('offline'))
   }, [])
 
-  const crumb = CRUMBS[pathname] || (pathname.startsWith('/results') ? 'Analysis Result' : 'Overview')
+  const crumb = CRUMBS[pathname] || (pathname.startsWith('/oa') ? 'Meniscus & OA Analysis'
+    : pathname.startsWith('/implant') ? 'Measurements & Implant Sizing'
+    : pathname.startsWith('/results') ? 'Analysis Result' : 'Overview')
   const online = api === 'online'
   const dot = online ? 'bg-ok' : api === 'offline' ? 'bg-danger' : 'bg-ink-400'
 

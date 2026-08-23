@@ -1,25 +1,38 @@
 # Knee.AI — AI-Assisted Knee Analysis Platform
 
-A clinical decision-support platform with two assessment modules, backed by Supabase auth
-(with TOTP 2FA), an AI assistant, and a batch research mode:
+A clinical decision-support platform combining a **real vision-language model reading the actual
+uploaded image**, a live conversational AI assistant, and two structured assessment modules —
+backed by Supabase auth with TOTP 2FA and a batch research mode:
 
-1. **Module 1 — Medial Meniscus Thickness & OA Analysis**: simulated segmentation, three-point
-   thickness measurement, OA classification, KL grading, and population comparison charts.
-2. **Module 2 — Femur/Tibia Measurements & Implant Sizing**: simulated bone morphometry matched
-   against a built-in catalogue of six implant systems, ranked by euclidean distance.
+**AI Visual Scan** sends the uploaded X-ray/MRI to a genuine pretrained vision-language model
+(Qwen3-VL, hosted on Featherless AI) that reports what it actually sees — joint space, alignment,
+visible spurring/sclerosis, image quality — independent of anything else on the page. See
+[AI features](#ai-features). Alongside it:
+
+1. **Module 1 — Medial Meniscus Thickness & OA Analysis**: three-point thickness measurement, OA
+   classification, KL grading, and population comparison charts.
+2. **Module 2 — Femur/Tibia Measurements & Implant Sizing**: bone morphometry matched against a
+   built-in catalogue of six implant systems, ranked by euclidean distance.
 
 Every analysis also carries an **image-quality score and per-measurement uncertainty band**,
 derived from the uploaded film itself (resolution, sharpness, contrast, whether the bone region
 was actually located) — degraded films are flagged for clinical review rather than presented
 with the same confidence as a clean one.
 
-No live model weights ship with this repo; analysis results are deterministically simulated or
-drawn from pre-analyzed sidecars. See [Inference paths](#inference-paths).
+**What's real vs. simulated, plainly:** the AI Visual Scan and the chat/food-advice features are
+live calls to real hosted models (Featherless AI) — that output is genuinely generated per
+request, not canned. The *quantitative* numbers in Modules 1 and 2 — thickness in mm, OA class, KL
+grade, bone dimensions — are deterministic simulation or drawn from pre-analyzed sidecars, not a
+trained measurement model; no live model weights for that part ship with this repo. See
+[Inference paths](#inference-paths) and [Simulation logic](#simulation-logic) for exactly how, and
+[AI features](#ai-features) for what's real.
 
 ---
 
 ## Feature overview
 
+- **AI Visual Scan** — a real pretrained vision-language model (Qwen3-VL via Featherless) looks at
+  the actual uploaded image and reports its own visual observations, on demand, per analysis.
 - **Two clinical modules** as separate pages (`/oa`, `/implant`), sharing one patient header,
   quality banner, and tab switcher for the same study.
 - **Accounts via Supabase Auth** — email/password sign-in, doctor/patient roles, row-level
@@ -89,11 +102,13 @@ SUPABASE_URL=
 SUPABASE_ANON_KEY=
 
 FEATHERLESS_API_KEY=
-FEATHERLESS_MODEL=deepseek-ai/DeepSeek-V3-0324   # optional, this is the default
+FEATHERLESS_MODEL=deepseek-ai/DeepSeek-V3-0324       # optional, this is the default
+FEATHERLESS_VISION_MODEL=Qwen/Qwen3-VL-4B-Instruct   # optional, this is the default
 ```
 
 Without `SUPABASE_URL`/`SUPABASE_ANON_KEY`, every authenticated endpoint returns 401. Without
-`FEATHERLESS_API_KEY`, the chat widget and food-advice button return 502 — everything else works.
+`FEATHERLESS_API_KEY`, the chat widget, food-advice button, and AI Visual Scan all return 502 —
+everything else works.
 
 **`frontend/.env`** (gitignored, local dev) and **`frontend/.env.production`** (tracked — see
 below):
@@ -124,7 +139,8 @@ Frontend and backend deploy as **two separate Vercel projects** from this one re
 
 - **Backend** — root directory set to `backend/`, entrypoint `backend/api/index.py`
   (`backend/vercel.json` routes everything to it). Set `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
-  `FEATHERLESS_API_KEY`, `FEATHERLESS_MODEL` as project environment variables.
+  `FEATHERLESS_API_KEY`, `FEATHERLESS_MODEL`, `FEATHERLESS_VISION_MODEL` as project environment
+  variables.
 - **Frontend** — root directory `frontend/`, standard Vite build. `frontend/.env.production`
   supplies `VITE_API_URL` (pointed at the backend project's URL) and the Supabase public config.
 
@@ -144,7 +160,8 @@ local dev launches uvicorn from *inside* `backend/` rather than from the repo ro
 3. **Meniscus & OA** (`/oa/:id`) and **Implant Sizing** (`/implant/:id`) — the two modules, each
    with its own page and a tab switcher between them for the same study. Both show the quality
    banner and ± uncertainty bands when relevant.
-4. **Get AI Food Diet** / the chat bubble — AI-generated dietary guidance for the current study,
+4. **AI Visual Scan** — a real vision-language model's own read of the uploaded image, on demand.
+   **Get AI Food Diet** / the chat bubble — AI-generated dietary guidance for the current study,
    or a free-form conversation that's aware of whatever study you're viewing.
 5. **Generate Report** — downloads a two-page clinical PDF.
 6. **History** — every stored analysis, searchable and filterable by severity, with a doctor-only
@@ -177,6 +194,7 @@ knee-ai/
 │   │   ├── report.py                # image serving + PDF report
 │   │   ├── advice.py                # AI food/diet advice (Featherless)
 │   │   ├── chat.py                  # AI assistant chat (Featherless)
+│   │   ├── vision.py                # AI Visual Scan — real vision model on the image (Featherless)
 │   │   └── research.py              # batch cohort analysis + statistics
 │   ├── services/
 │   │   ├── image_processor.py      # OpenCV overlays, calliper lines, variants
@@ -218,8 +236,8 @@ knee-ai/
 
 ## API
 
-All `/api/analyze*`, `/api/analyses*`, `/api/implants`, `/api/advice`, `/api/chat`, and
-`/api/research/*` routes require `Authorization: Bearer <supabase access token>`, and reject a
+All `/api/analyze*`, `/api/analyses*`, `/api/implants`, `/api/advice`, `/api/chat`, `/api/vision`,
+and `/api/research/*` routes require `Authorization: Bearer <supabase access token>`, and reject a
 password-only (aal1) token if the account has 2FA enabled. `/api/report*`, `/api/images/*`, and
 `/api/samples*` are public.
 
@@ -239,6 +257,7 @@ password-only (aal1) token if the account has 2FA enabled. `/api/report*`, `/api
 | `POST`   | `/api/report`               |      | Clinical PDF report (from a record in the body)    |
 | `POST`   | `/api/advice`               |  ✓   | AI food/diet advice for one analysis               |
 | `POST`   | `/api/chat`                 |  ✓   | Multi-turn AI assistant, optionally record-aware   |
+| `POST`   | `/api/vision`               |  ✓   | Real vision-model observations on the actual image |
 | `POST`   | `/api/research/cohort`      |  ✓   | Batch-analyse uploaded studies → cohort statistics |
 | `POST`   | `/api/research/cohort/samples` | ✓ | Cohort statistics over the bundled samples         |
 
@@ -252,9 +271,10 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
   -F "sex=Female" -F "imaging_type=X-ray" -F "affected_side=Left"
 ```
 
-`POST /api/advice` and `POST /api/chat` both accept an optional `language` field — one of
-`Hindi`, `Tamil`, `Malayalam`, `Telugu` (whitelisted server-side; anything else is ignored rather
-than interpolated into the prompt, since it isn't free text an end user should control).
+`POST /api/advice`, `POST /api/chat`, and `POST /api/vision` all accept an optional `language`
+field — one of `Hindi`, `Tamil`, `Malayalam`, `Telugu` (whitelisted server-side; anything else is
+ignored rather than interpolated into the prompt, since it isn't free text an end user should
+control).
 
 ---
 
@@ -282,19 +302,44 @@ than interpolated into the prompt, since it isn't free text an end user should c
 
 ## AI features
 
-Both the floating chat widget and the "Get AI Food Diet" button call **Featherless AI**, an
-OpenAI-compatible inference host, via `services/featherless_client.py`. The model is set by
-`FEATHERLESS_MODEL` (default `deepseek-ai/DeepSeek-V3-0324`); Featherless also hosts Kimi (`
-moonshotai/Kimi-K2-Instruct`) and GLM (`zai-org/GLM-4.6`) models, which work as drop-in
-replacements against the same endpoint.
+Every AI feature in this app is a live call to a real hosted model on **Featherless AI**, an
+OpenAI-compatible inference host, via `services/featherless_client.py` — nothing here is canned
+or templated.
+
+### AI Visual Scan — real vision-model image analysis
+
+`POST /api/vision` (`backend/routers/vision.py`) sends the **actual uploaded image** to a
+pretrained vision-language model — `FEATHERLESS_VISION_MODEL`, default `Qwen/Qwen3-VL-4B-Instruct`
+— and asks what it can literally see: joint
+space width and symmetry, bone alignment, visible spurring or sclerosis patterns, soft-tissue
+shadows, image positioning and quality. This is independent of Modules 1/2 — it's a second,
+unrelated read of the film by a genuine trained model, not a restatement of this platform's own
+simulated numbers.
+
+It's deliberately scoped to *observation*, not diagnosis: the system prompt explicitly forbids
+stating a diagnosis, a severity grade, or a treatment recommendation, and instructs the model to
+say plainly when part of the image is unclear rather than guess. Every response ends with a
+one-line reminder that these are visual observations, not a diagnosis.
+
+The image itself is inlined as base64 into the request rather than passed as a URL — a local dev
+backend on `127.0.0.1` isn't reachable from Featherless's servers to fetch a URL from, but the
+backend can always reach the image bytes itself (local disk in dev, Supabase storage in prod), so
+the feature works identically in both environments. See `_resolve_image_data_uri()` in
+`vision.py`.
+
+### Chat and food advice
 
 - **Chat** (`/api/chat`) is a real multi-turn conversation, capped at 20 messages and 2000
-  characters each. If you're viewing an analysis when you open it, that study's classification,
-  KL grade, thickness, and recommended implant are folded into the system prompt automatically.
+  characters each, using a text model (`FEATHERLESS_MODEL`, default `deepseek-ai/DeepSeek-V3-0324`
+  — Featherless also hosts Kimi, e.g. `moonshotai/Kimi-K2-Instruct`, and GLM, e.g.
+  `zai-org/GLM-4.6`, as drop-in replacements against the same endpoint). If you're viewing an
+  analysis when you open it, that study's classification, KL grade, thickness, and recommended
+  implant are folded into the system prompt automatically.
 - **Food advice** (`/api/advice`) is a one-shot write-up tailored to one analysis's OA severity,
   age, and sex, kept distinct from the doctor-authored "Doctor's Advice" field in History.
-- Both endpoints strip markdown the model leaks despite being told not to (`strip_markdown()`),
-  since instruction-following on that specific rule isn't reliable across models.
+- All three endpoints strip markdown the model leaks despite being told not to
+  (`strip_markdown()`), since instruction-following on that specific rule isn't reliable across
+  models or modalities.
 
 ## Multi-language
 
@@ -470,4 +515,8 @@ of assessment modules.
 ## Disclaimer
 
 This tool is intended for research and decision support only. Final diagnosis remains with the
-clinician. No validated model is used; all measurements are simulated.
+clinician. The AI Visual Scan and chat/food-advice features call real hosted models, but none of
+them are validated diagnostic tools, and the AI Visual Scan is explicitly instructed never to
+state a diagnosis. The quantitative measurements in Modules 1 and 2 — thickness, OA class, KL
+grade, bone dimensions — are simulated, not the output of a validated measurement model; see
+[Simulation logic](#simulation-logic).

@@ -112,6 +112,21 @@ export const getFoodAdvice = (record, language) =>
     }),
   }).then(handle)
 
+/**
+ * A vision model's own read of the uploaded image — independent of this
+ * platform's own (simulated) measurements. `filename` is the original
+ * ("none" variant) image filename from the analysis record.
+ */
+export const getVisionObservations = (filename, record, language) =>
+  fetchWithAuth(`${BASE}/vision`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filename, record,
+      language: language && language !== 'English' ? language : undefined,
+    }),
+  }).then(handle)
+
 /** Batch-analyse studies and return cohort statistics. */
 export function analyseCohort(files, meta = {}, includeFlagged = false) {
   const form = new FormData()

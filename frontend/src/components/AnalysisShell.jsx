@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useParams } from 'react-router-dom'
-import { getAnalysis, downloadReport, getFoodAdvice, listAnalyses } from '../lib/api'
+import { getAnalysis, downloadReport, getFoodAdvice, getVisionObservations, listAnalyses } from '../lib/api'
 import { useLanguage } from '../lib/LanguageContext'
 import { LANGUAGE_NAMES } from '../lib/i18n'
 import { Card, CompareBar, ErrorNote, SeverityBadge, Spinner } from './ui'
@@ -125,7 +125,7 @@ function ModuleHeader({ n, title, subtitle, tone }) {
   )
 }
 
-function PatientHeader({ result, onGetAdvice, gettingAdvice }) {
+function PatientHeader({ result, onGetAdvice, gettingAdvice, onGetVision, gettingVision }) {
   const { t } = useLanguage()
   const p = result.patient
   const fields = [
@@ -175,6 +175,10 @@ function PatientHeader({ result, onGetAdvice, gettingAdvice }) {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button className="btn-ghost" onClick={onGetVision} disabled={gettingVision}>
+            <Icon name="search" size={15} />
+            {gettingVision ? t('scanningImage') : t('getAiVisualScan')}
+          </button>
           <button className="btn-ghost" onClick={onGetAdvice} disabled={gettingAdvice}>
             <Icon name="leaf" size={15} />
             {gettingAdvice ? t('thinking') : t('getAiFoodDiet')}
@@ -383,6 +387,9 @@ export function AnalysisShell({ children }) {
   const [foodAdvice, setFoodAdvice] = useState('')
   const [adviceError, setAdviceError] = useState('')
   const [gettingAdvice, setGettingAdvice] = useState(false)
+  const [visionResult, setVisionResult] = useState('')
+  const [visionError, setVisionError] = useState('')
+  const [gettingVision, setGettingVision] = useState(false)
 
   const handleGetAdvice = async () => {
     setGettingAdvice(true)
@@ -394,6 +401,20 @@ export function AnalysisShell({ children }) {
       setAdviceError(e.message)
     } finally {
       setGettingAdvice(false)
+    }
+  }
+
+  const handleGetVision = async () => {
+    setGettingVision(true)
+    setVisionError('')
+    try {
+      const filename = result.images?.variants?.none
+      const { observations } = await getVisionObservations(filename, result, LANGUAGE_NAMES[language])
+      setVisionResult(observations)
+    } catch (e) {
+      setVisionError(e.message)
+    } finally {
+      setGettingVision(false)
     }
   }
 
@@ -444,7 +465,11 @@ export function AnalysisShell({ children }) {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <PatientHeader result={result} onGetAdvice={handleGetAdvice} gettingAdvice={gettingAdvice} />
+      <PatientHeader
+        result={result}
+        onGetAdvice={handleGetAdvice} gettingAdvice={gettingAdvice}
+        onGetVision={handleGetVision} gettingVision={gettingVision}
+      />
 
       {result.quality?.review_recommended && <ReviewBanner quality={result.quality} />}
 
@@ -453,6 +478,16 @@ export function AnalysisShell({ children }) {
       {result.advice && (
         <Card eyebrow="Clinician Note" title={t('clinicianNote')} icon="file" tone="green">
           <p className="text-[13px] text-navy font-display leading-relaxed whitespace-pre-wrap">{result.advice}</p>
+        </Card>
+      )}
+
+      {(visionResult || visionError) && (
+        <Card eyebrow={t('aiGenerated')} title={t('aiVisualObservationsTitle')} icon="search" tone="blue">
+          {visionError ? (
+            <ErrorNote>{visionError}</ErrorNote>
+          ) : (
+            <p className="text-[13px] text-navy font-display leading-relaxed whitespace-pre-wrap">{visionResult}</p>
+          )}
         </Card>
       )}
 

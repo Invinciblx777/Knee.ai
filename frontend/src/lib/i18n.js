@@ -30,6 +30,9 @@ export const DEFAULT_LANGUAGE = 'en'
 export const LANGUAGE_NAMES = Object.fromEntries(LANGUAGES.map((l) => [l.code, l.label]))
 
 const en = {
+  getAiVisualScan: 'AI Visual Scan',
+  scanningImage: 'Scanning...',
+  aiVisualObservationsTitle: 'AI Visual Observations',
   navAbout: 'About',
   crumbAbout: 'About Knee.AI',
   aboutTagline: 'AI-assisted knee osteoarthritis analysis and patient-specific implant sizing, built as a clinical decision-support tool.',
@@ -369,6 +372,9 @@ const en = {
 }
 
 const hi = {
+  getAiVisualScan: 'AI विज़ुअल स्कैन',
+  scanningImage: 'स्कैन हो रहा है...',
+  aiVisualObservationsTitle: 'AI विज़ुअल अवलोकन',
   navAbout: 'हमारे बारे में',
   crumbAbout: 'Knee.AI के बारे में',
   aboutTagline: 'AI-सहायता प्राप्त घुटने की ऑस्टियोआर्थराइटिस विश्लेषण और रोगी-विशिष्ट इम्प्लांट साइज़िंग, एक क्लिनिकल निर्णय-सहायता उपकरण के रूप में बनाया गया।',
@@ -708,6 +714,9 @@ const hi = {
 }
 
 const ta = {
+  getAiVisualScan: 'AI காட்சி ஸ்கேன்',
+  scanningImage: 'ஸ்கேன் செய்கிறது...',
+  aiVisualObservationsTitle: 'AI காட்சி அவதானிப்புகள்',
   navAbout: 'எங்களை பற்றி',
   crumbAbout: 'Knee.AI பற்றி',
   aboutTagline: 'AI-உதவியுடன் கூடிய முழங்கால் ஆஸ்டியோஆர்த்ரைடிஸ் பகுப்பாய்வு மற்றும் நோயாளி-குறிப்பிட்ட இம்ப்ளாண்ட் அளவீடு, ஒரு மருத்துவ முடிவு-ஆதரவு கருவியாக உருவாக்கப்பட்டது.',
@@ -1047,6 +1056,9 @@ const ta = {
 }
 
 const ml = {
+  getAiVisualScan: 'AI വിഷ്വൽ സ്കാൻ',
+  scanningImage: 'സ്കാൻ ചെയ്യുന്നു...',
+  aiVisualObservationsTitle: 'AI വിഷ്വൽ നിരീക്ഷണങ്ങൾ',
   navAbout: 'ഞങ്ങളെക്കുറിച്ച്',
   crumbAbout: 'Knee.AI-നെക്കുറിച്ച്',
   aboutTagline: 'AI-സഹായത്തോടെയുള്ള കാൽമുട്ട് ഓസ്റ്റിയോ ആർത്രൈറ്റിസ് വിശകലനവും രോഗി-നിർദ്ദിഷ്ട ഇംപ്ലാന്റ് സൈസിംഗും, ഒരു ക്ലിനിക്കൽ തീരുമാന-പിന്തുണാ ഉപകരണമായി നിർമ്മിച്ചത്.',
@@ -1386,6 +1398,9 @@ const ml = {
 }
 
 const te = {
+  getAiVisualScan: 'AI విజువల్ స్కాన్',
+  scanningImage: 'స్కాన్ చేస్తోంది...',
+  aiVisualObservationsTitle: 'AI విజువల్ పరిశీలనలు',
   navAbout: 'మా గురించి',
   crumbAbout: 'Knee.AI గురించి',
   aboutTagline: 'AI-సహాయంతో మోకాలి ఆస్టియో ఆర్థరైటిస్ విశ్లేషణ మరియు రోగి-నిర్దిష్ట ఇంప్లాంట్ సైజింగ్, ఒక క్లినికల్ నిర్ణయ-మద్దతు సాధనంగా నిర్మించబడింది.',

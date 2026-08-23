@@ -8,6 +8,7 @@ import NewAnalysis from './pages/NewAnalysis'
 import History from './pages/History'
 import Research from './pages/Research'
 import Settings from './pages/Settings'
+import About from './pages/About'
 import Results from './pages/Results'
 import OaAnalysis from './pages/OaAnalysis'
 import ImplantSizing from './pages/ImplantSizing'
@@ -107,6 +108,7 @@ export default function App() {
               <Route path="/history" element={<History />} />
               <Route path="/research" element={<Research />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/about" element={<About />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>

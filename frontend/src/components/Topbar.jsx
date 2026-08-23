@@ -13,6 +13,7 @@ const CRUMB_KEYS = {
   '/history': 'navHistory',
   '/research': 'crumbResearch',
   '/settings': 'navSettings',
+  '/about': 'crumbAbout',
 }
 
 export default function Topbar({ onMenu }) {

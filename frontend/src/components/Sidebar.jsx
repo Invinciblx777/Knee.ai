@@ -10,6 +10,7 @@ const NAV = [
   { to: '/history', key: 'navHistory', icon: 'history' },
   { to: '/research', key: 'navResearch', icon: 'layers' },
   { to: '/settings', key: 'navSettings', icon: 'settings' },
+  { to: '/about', key: 'navAbout', icon: 'file' },
 ]
 
 function Item({ to, label, icon, end, onClick }) {

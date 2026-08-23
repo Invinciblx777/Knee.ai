@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import { getImplants } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { AuthContext } from '../App'
@@ -66,9 +67,20 @@ export default function Settings() {
         factorType: 'totp',
         // Unique per attempt so a retry never collides with itself either.
         friendlyName: `authenticator-${Date.now()}`,
+        // Without this the project's Site URL setting ("localhost:3000", a
+        // leftover default) becomes the label shown in the user's
+        // authenticator app instead of the app's actual name.
+        issuer: 'Knee.AI',
       })
       if (enrollErr) throw enrollErr
-      setEnrolling({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret })
+
+      // Supabase also returns a pre-rendered QR as one <rect> per module —
+      // for a real TOTP secret that's several thousand elements (~600KB),
+      // and rendering it (as an SVG data URI or via innerHTML) proved
+      // unreliable in practice. Generating our own small QR client-side from
+      // the same otpauth:// URI sidesteps that entirely.
+      const qrDataUrl = await QRCode.toDataURL(data.totp.uri, { width: 220, margin: 1 })
+      setEnrolling({ id: data.id, qr: qrDataUrl, secret: data.totp.secret })
     } catch (err) {
       setMfaError(err.message)
     }
@@ -184,16 +196,7 @@ export default function Settings() {
                 className="w-[172px] h-[172px] bg-white rounded-[8px] p-2 flex items-center justify-center"
                 style={{ border: '2px solid #2D2016' }}
               >
-                {/* Supabase returns the QR as an SVG document (XML declaration and
-                    all), not an HTML fragment — injecting it via innerHTML is what
-                    produced a blank box. Its own docs point at this: wrap it as a
-                    data: URI and let the browser's image decoder parse it as SVG,
-                    same as any other image source. */}
-                <img
-                  src={`data:image/svg+xml;utf-8,${encodeURIComponent(enrolling.qr)}`}
-                  alt="2FA setup QR code"
-                  className="w-full h-full"
-                />
+                <img src={enrolling.qr} alt="2FA setup QR code" className="w-full h-full" />
               </div>
             </div>
             <p className="mt-3 text-[11px] text-muted font-display text-center">{t('mfaManualSecret')}</p>
